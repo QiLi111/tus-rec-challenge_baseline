@@ -1,0 +1,23 @@
+# ignore ALL .log files
+*.log
+
+# ignore ALL files in ANY directory named temp
+# .git/
+.idea/
+.vscode/
+results/
+__pycache__/
+.DS_Store
+seq*/
+log/
+*.sh
+sh/
+*.png
+*.mha
+*.csv
+*.npy
+
+
+
+
+

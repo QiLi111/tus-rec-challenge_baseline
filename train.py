@@ -194,3 +194,6 @@ for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS
         model.train(True)
 
 
+# write a code structure readme file for the entire project
+        
+        

@@ -16,6 +16,8 @@ sh/
 *.mha
 *.csv
 *.npy
+jobs/
+log/
 
 
 

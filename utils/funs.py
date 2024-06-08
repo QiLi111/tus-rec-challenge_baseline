@@ -120,3 +120,4 @@ def save_model(model,epoch,opt):
         saved_models = [i for i in list_dir if i.startswith('model_epoch')]
         if len(saved_models)>4:
             os.remove(os.path.join(opt.SAVE_PATH,'saved_model',sorted(saved_models)[0]))
+

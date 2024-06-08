@@ -3,7 +3,8 @@ This is the official baseline code for TUS-REC Challenge - MICCAI2024
 
 > [!IMPORTANT]  
 > The code currently includes only the training process; the testing code will be coming soon.
-> [!NOTE]
+
+> [!NOTE]  
 >When testing, the algorithm is expected to take the entire scan as input and output two different sets of transformation-representing displacement vectors as results, a set of displacement vectors on individual pixels and a set of displacement vectors on provided landmarks. There is no requirement on how the algorithm is designed internally, for example, whether it is learning-based method; frame-, sequence- or scan-based processing; or, rigid-, affine- or nonrigid transformation assumptions. 
 
 ## Install conda environment

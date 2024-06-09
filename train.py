@@ -3,7 +3,6 @@ import os
 import torch
 import json
 import torch.nn as nn
-from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from utils.loader import Dataset
 from utils.network import build_model
@@ -49,7 +48,7 @@ train_loader = torch.utils.data.DataLoader(
     dset_train,
     batch_size=opt.MINIBATCH_SIZE,
     shuffle=True,
-    num_workers=4,
+    num_workers=8,
     pin_memory=True
     )
 
@@ -57,10 +56,16 @@ val_loader = torch.utils.data.DataLoader(
     dset_val,
     batch_size=1, 
     shuffle=False,
-    num_workers=4,
+    num_workers=8,
     pin_memory=True
     )
 
+# a=0
+
+# for step, (frames,tforms,_) in tqdm(enumerate(train_loader)):
+#     frames = frames.to(device)
+#     a+=1
+# print(a) 
 
 ## load calibration metric
 tform_calib_scale,tform_calib_R_T, tform_calib = read_calib_matrices(opt.FILENAME_CALIB)
@@ -116,13 +121,14 @@ val_dist_min = 1e10
 optimiser = torch.optim.Adam(model.parameters(), lr=opt.LEARNING_RATE)
 criterion = torch.nn.MSELoss()
 metrics = PointDistance()
-
+print('Training started')
 for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS):
     
     train_epoch_loss = 0
     train_epoch_dist = 0
-    for step, (frames, tforms, tforms_inv,_scan_name) in tqdm(enumerate(train_loader)):
-        frames, tforms, tforms_inv = frames.to(device), tforms.to(device), tforms_inv.to(device)
+    for step, (frames, tforms,_) in enumerate(train_loader):
+        frames, tforms = frames.to(device), tforms.to(device)
+        tforms_inv = torch.linalg.inv(tforms)
         frames = frames/255
         # transform label based on label type
         labels = transform_label(tforms, tforms_inv)
@@ -132,19 +138,19 @@ for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS
         outputs = model(frames)
         # transform prediction according to label type
         preds = transform_prediction(outputs)
-        # transfrom prediction and label into points, for metric calculation
-        preds_pts = transform_into_points(preds)
-        labels_pts = transform_into_points(labels)
         # calculate loss and metric
         loss = criterion(preds, labels)
-        dist = metrics(preds_pts, labels_pts).detach()
-
-        train_epoch_loss += loss.item()
-        train_epoch_dist += dist
-
         loss.backward()
         optimiser.step()
 
+        # transfrom prediction and label into points, for metric calculation
+        preds_pts = transform_into_points(preds.data)
+        labels_pts = transform_into_points(labels)
+        dist = metrics(preds_pts, labels_pts).detach()
+    
+        train_epoch_loss += loss.item()
+        train_epoch_dist += dist
+        
     train_epoch_loss /= (step + 1)
     train_epoch_dist /= (step + 1)
     # print loss information on terminal
@@ -157,9 +163,10 @@ for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS
 
         epoch_loss_val = 0
         epoch_dist_val = 0
-        for step, (fr_val, tf_val, tf_val_inv,_scan_name_val) in tqdm(enumerate(val_loader)):
+        for step, (fr_val, tf_val, _) in enumerate(val_loader):
 
-            fr_val, tf_val, tf_val_inv = fr_val.to(device), tf_val.to(device), tf_val_inv.to(device)
+            fr_val, tf_val = fr_val.to(device), tf_val.to(device)
+            tf_val_inv = torch.linalg.inv(tf_val)
             # transform label based on label type
             la_val = transform_label(tf_val, tf_val_inv)
             fr_val = fr_val/255

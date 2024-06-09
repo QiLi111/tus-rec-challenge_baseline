@@ -9,8 +9,8 @@ class BaseOptions():
     def initialize(self):
         self.parser.add_argument('--DATA_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of saving path')
         self.parser.add_argument('--FILENAME_CALIB', type=str, default="/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet/calib_matrix.csv",help='dataroot of calibration matrix')
-        self.parser.add_argument('--multi_gpu', type=bool, default=True, help='whether use multi gpus')
-        self.parser.add_argument('--gpu_ids', type=str, default='0,1', help='gpu id: e.g., 0,1,2...')
+        self.parser.add_argument('--multi_gpu', type=bool, default=False, help='whether use multi gpus')
+        self.parser.add_argument('--gpu_ids', type=str, default='1', help='gpu id: e.g., 0,1,2...')
         self.initialized = True
 
     def parse(self):

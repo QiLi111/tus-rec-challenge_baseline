@@ -60,20 +60,6 @@ class Dataset():
         else:
             self.sample_range = sample_range
 
-        # # save handles for all .h5 file
-        # self.handles_all = [[None for i in range(len(self.scans))] for j in range(len(self.subs))]
-        # self.scan_name_all = [[None for i in range(len(self.scans))] for j in range(len(self.subs))]
-
-        # for i in range(len(self.subs)):
-        #     scans = [f for f in os.listdir(os.path.join(self.data_path, self.subs[i])) if f.endswith(".h5")]
-        #     if len(scans) != 24:
-        #         raise("Each subjects should have 24 scans")
-        #     fn_mha=sorted(scans)
-        #     for j in range(len(fn_mha)):
-                
-        #         self.handles_all[i][j] = h5py.File(os.path.join(self.data_path,self.subs[i],fn_mha[j]), 'r')
-        #         self.scan_name_all[i][j] = fn_mha[j][:-3]
-
     def partition_by_ratio(self, ratios, randomise=False):
         # partition the dataset into train, val, and test sets
         """
@@ -136,9 +122,6 @@ class Dataset():
     def __getitem__(self, idx):
 
         indices = self.indices_in_use[idx]
-        
-        # h5file = self.handles_all[indices[0]][indices[1]]
-        # scan_name = self.scan_name_all[indices[0]][indices[1]]
 
         scans = [f for f in os.listdir(os.path.join(self.data_path, self.subs[indices[0]])) if f.endswith(".h5")]
         if len(scans) != 24:
@@ -146,32 +129,17 @@ class Dataset():
         fn_mha=sorted(scans)
 
         h5file = h5py.File(os.path.join(self.data_path,self.subs[indices[0]],fn_mha[indices[1]]), 'r')
-           
-
-        frames = h5file['frames'][()]
-        tforms = h5file['tforms'][()]
-        h5file.flush()
-        h5file.close()
-        tforms_inv = np.linalg.inv(tforms)
+        frames = h5file['frames']
+        tforms = h5file['tforms']
         scan_name = fn_mha[indices[1]][:-3]
-
-
-        # with h5py.File(os.path.join(self.data_path,self.subs[indices[0]],fn_mha[indices[1]])) as f:
-        #     frames = f['frames'][()]
-        #     tforms = f['tforms'][()]
-        
-        # tforms_inv = np.linalg.inv(tforms)
-        # scan_name = fn_mha[indices[1]][:-3]
         
         if self.num_samples == -1:  # sample all available frames, for validation
-            
-            return frames,tforms,tforms_inv,scan_name
+            return frames[()],tforms[()],scan_name
 
         else:
             # sample a sequence of frames
             i_frames = self.frame_sampler(len(frames))
-            return frames[i_frames],tforms[i_frames],tforms_inv[i_frames],scan_name
-
+            return frames[i_frames],tforms[i_frames],scan_name
 
     def frame_sampler(self, n):
         """

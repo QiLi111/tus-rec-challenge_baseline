@@ -12,8 +12,8 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--model_name', type=str,default='efficientnet_b1',help='network name:{"efficientnet_b1", "resnet", "LSTM_0", "LSTM", "LSTM_GT","classicifation_b1"}')
 
         self.parser.add_argument('--retrain', type=bool,default=False,help='whether load a pretrained model')
-        self.parser.add_argument('--retrain_epoch', type=str,default='00000100',help='whether load a pretrained model: {0: train from sctrach; a number, e.g., 1000, train from epoch 1000}')
-        self.parser.add_argument('--MINIBATCH_SIZE', type=int,default=8,help='input batch size')
+        self.parser.add_argument('--retrain_epoch', type=str,default='00000000',help='whether load a pretrained model: {0: train from sctrach; a number, e.g., 1000, train from epoch 1000}')
+        self.parser.add_argument('--MINIBATCH_SIZE', type=int,default=16,help='input batch size')
         self.parser.add_argument('--LEARNING_RATE',type=float,default=1e-4,help='learing rate')
         self.parser.add_argument('--NUM_EPOCHS',type =int,default=int(1e6),help='# of iter to lin')
         self.parser.add_argument('--FREQ_INFO', type=int, default=10,help='frequency of print info')

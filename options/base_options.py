@@ -28,8 +28,9 @@ class BaseOptions():
         print('----------Option----------')
 
         # create saved result path
-        saved_results = 'seq_len' + str(self.opt.NUM_SAMPLES) + '_' + self.opt.model_name + '_' + 'lr' + str(self.opt.LEARNING_RATE) 
-        self.opt.SAVE_PATH = os.path.join(os.getcwd(), saved_results)
+        saved_results = 'seq_len' + str(self.opt.NUM_SAMPLES) + '__' + self.opt.model_name + '__' + 'lr' + str(self.opt.LEARNING_RATE)\
+        + '__label_type_'+str(self.opt.LABEL_TYPE) + '__pred_type_'+str(self.opt.PRED_TYPE)
+        self.opt.SAVE_PATH = os.path.join(os.getcwd(),'results', saved_results)
         
         if not os.path.exists(self.opt.SAVE_PATH):
             os.makedirs(self.opt.SAVE_PATH)

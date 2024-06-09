@@ -20,6 +20,7 @@ jobs/
 log/
 loader_merge.py
 data_merge.py
+results/
 
 
 

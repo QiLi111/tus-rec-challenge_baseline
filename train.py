@@ -60,12 +60,6 @@ val_loader = torch.utils.data.DataLoader(
     pin_memory=True
     )
 
-# a=0
-
-# for step, (frames,tforms,_) in tqdm(enumerate(train_loader)):
-#     frames = frames.to(device)
-#     a+=1
-# print(a) 
 
 ## load calibration metric
 tform_calib_scale,tform_calib_R_T, tform_calib = read_calib_matrices(opt.FILENAME_CALIB)
@@ -126,7 +120,7 @@ for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS
     
     train_epoch_loss = 0
     train_epoch_dist = 0
-    for step, (frames, tforms,_) in enumerate(train_loader):
+    for step, (frames, tforms,_,_) in enumerate(train_loader):
         frames, tforms = frames.to(device), tforms.to(device)
         tforms_inv = torch.linalg.inv(tforms)
         frames = frames/255
@@ -163,7 +157,7 @@ for epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS
 
         epoch_loss_val = 0
         epoch_dist_val = 0
-        for step, (fr_val, tf_val, _) in enumerate(val_loader):
+        for step, (fr_val, tf_val,_,_) in enumerate(val_loader):
 
             fr_val, tf_val = fr_val.to(device), tf_val.to(device)
             tf_val_inv = torch.linalg.inv(tf_val)

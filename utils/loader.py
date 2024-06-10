@@ -134,12 +134,12 @@ class Dataset():
         scan_name = fn_mha[indices[1]][:-3]
         
         if self.num_samples == -1:  # sample all available frames, for validation
-            return frames[()],tforms[()],scan_name
+            return frames[()],tforms[()],indices,scan_name
 
         else:
             # sample a sequence of frames
             i_frames = self.frame_sampler(len(frames))
-            return frames[i_frames],tforms[i_frames],scan_name
+            return frames[i_frames],tforms[i_frames],indices,scan_name
 
     def frame_sampler(self, n):
         """
@@ -166,13 +166,15 @@ class Dataset():
     
     
     @staticmethod
-    def read_json(jason_filename):
+    def read_json(jason_filename,num_samples = None):
         # read the dataset information from a json file
         with open(jason_filename, 'r', encoding='utf-8') as f:
             obj = json.load(f)
+            if num_samples is None:
+                num_samples = obj['num_samples']
             return Dataset(
                 data_path=obj['data_path'],
-                num_samples=obj['num_samples'], 
+                num_samples=num_samples, 
                 sample_range=obj['sample_range'],
                 indices_in_use = [tuple(ids) for ids in obj['indices_in_use']], # convert to tuples from json string
                 )

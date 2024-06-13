@@ -48,6 +48,8 @@ if not os.path.exists(saved_folder_val):
 if not os.path.exists(saved_folder_test):
     os.makedirs(saved_folder_test)
 
+opt.LABEL_PATH = saved_folder_train
+opt.PREDICTION_PATH = saved_folder_train
 # evaluation on training set
 Evaluation_train = Evaluation(opt,device, dset_train,'best_validation_dist_model',data_pairs,saved_folder_train)
 for scan_index in range(len(dset_train)):
@@ -56,8 +58,12 @@ for scan_index in range(len(dset_train)):
 
 
 # evaluation on validation set
+opt.LABEL_PATH = saved_folder_val
+opt.PREDICTION_PATH = saved_folder_val
 Evaluation_val = Evaluation(opt,device, dset_val,'best_validation_dist_model',data_pairs)
 # evaluation on test set
+opt.LABEL_PATH = saved_folder_test
+opt.PREDICTION_PATH = saved_folder_test
 Evaluation_test = Evaluation(opt,device, dset_test,'best_validation_dist_model',data_pairs)
 
 

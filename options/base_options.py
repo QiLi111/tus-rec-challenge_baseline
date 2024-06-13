@@ -7,8 +7,10 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self):
-        self.parser.add_argument('--DATA_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of saving path')
+        self.parser.add_argument('--DATA_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of dataset path')
         self.parser.add_argument('--FILENAME_CALIB', type=str, default="/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet/calib_matrix.csv",help='dataroot of calibration matrix')
+        self.parser.add_argument('--LABEL_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of label path for testing set')
+        self.parser.add_argument('--PREDICTION_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of prediction path for testing set')
         self.parser.add_argument('--multi_gpu', type=bool, default=False, help='whether use multi gpus')
         self.parser.add_argument('--gpu_ids', type=str, default='1', help='gpu id: e.g., 0,1,2...')
         self.initialized = True
@@ -29,7 +31,7 @@ class BaseOptions():
 
         # create saved result path
         saved_results = 'seq_len' + str(self.opt.NUM_SAMPLES) + '__' + self.opt.model_name + '__' + 'lr' + str(self.opt.LEARNING_RATE)\
-        + '__label_type_'+str(self.opt.LABEL_TYPE) + '__pred_type_'+str(self.opt.PRED_TYPE)
+        + '__pred_type_'+str(self.opt.PRED_TYPE) + '__label_type_'+str(self.opt.LABEL_TYPE) 
         self.opt.SAVE_PATH = os.path.join(os.getcwd(),'results', saved_results)
         
         if not os.path.exists(self.opt.SAVE_PATH):

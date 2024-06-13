@@ -46,7 +46,8 @@ class LabelTransform():
         pairs,
         image_points=None,
         tform_image_to_tool=None,
-        tform_image_mm_to_tool = None
+        tform_image_mm_to_tool = None,
+        tform_image_pixel_to_mm = None
         ):        
         """
         :param label_type: {"point", "parameter"}
@@ -54,18 +55,21 @@ class LabelTransform():
         :param image_points: 2-by-num or 3-by-num in pixel, used for computing loss
         :param tform_image_to_tool: transformation from image coordinates to tool coordinates, usually obtained from calibration
         :param tform_image_mm_to_tool: transformation from image coordinates (mm) to tool coordinates
+        :param tform_image_pixel_to_mm: transformation from image coordinates (pixel) to image coordinates (mm)
         """
 
         self.label_type = label_type
         self.pairs = pairs
         self.tform_image_to_tool = tform_image_to_tool
         self.tform_image_mm_to_tool = tform_image_mm_to_tool
+        self.tform_image_pixel_to_mm = tform_image_pixel_to_mm
         self.image_points = image_points
         # pre-compute reference points in tool coordinates
         self.image_points_in_tool = torch.matmul(self.tform_image_to_tool,self.image_points)
         self.tform_tool_to_image = torch.linalg.inv(self.tform_image_to_tool)
         self.tform_tool_to_image_mm = torch.linalg.inv(self.tform_image_mm_to_tool)
-            
+        self.tform_image_mm_to_pixel = torch.linalg.inv(self.tform_image_pixel_to_mm) 
+
         if self.label_type=="point":              
             self.call_function = self.to_points
         
@@ -84,20 +88,24 @@ class LabelTransform():
     
     def to_points(self, tforms, tforms_inv=None):
         _tforms = self.to_transform_t2t(tforms, tforms_inv)
-        return torch.matmul(_tforms, self.image_points)[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
+        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
  
     def to_transform_t2t(self, tforms, tforms_inv):
+        # the label includes the rigid part of calibration matrix, so the transformation is from image(mm) to tool, and the final transformed points in in mm, rather in pixel
+        # such that the label is Orthogonal Matrix, which is the requirment to use some functions in pytorch3d
         if tforms_inv is None:
             tforms_inv = torch.linalg.inv(tforms)
         
         tforms_world_to_tool0 = tforms_inv[:,self.pairs[:,0],:,:]
         tforms_tool1_to_world = tforms[:,self.pairs[:,1],:,:]
+        # tform_tool1_to_tool0 is Orthogonal Matrix
         tform_tool1_to_tool0 = torch.matmul(tforms_world_to_tool0, tforms_tool1_to_world)  # tform_tool1_to_tool0
-
-        return torch.matmul(self.tform_tool_to_image_mm[None,None,...],torch.matmul(tform_tool1_to_tool0,self.tform_image_to_tool[None,None,...])) # tform_image1_pixel_to_image0 (mm)
+        # the returned matrix, which is the label, is Orthogonal Matrix
+        return torch.matmul(self.tform_tool_to_image_mm[None,None,...],torch.matmul(tform_tool1_to_tool0,self.tform_image_mm_to_tool[None,None,...])) # tform_image1_mm_to_image0_mm
 
     def to_parameters(self, tforms, tforms_inv):
         _tforms = self.to_transform_t2t(tforms, tforms_inv)
+        # only Orthogonal Matrix can be converted to Euler angles
         Rotation = pytorch3d.transforms.matrix_to_euler_angles(_tforms[:,:,0:3, 0:3], 'ZYX')
         params = torch.cat((Rotation, _tforms[:,:,0:3, 3]),2)
         return params
@@ -112,7 +120,8 @@ class PredictionTransform():
         num_pairs=None,
         image_points=None,
         tform_image_to_tool=None,
-        tform_image_mm_to_tool=None
+        tform_image_mm_to_tool=None,
+        tform_image_pixel_to_mm = None
         ):
         
         """
@@ -122,6 +131,7 @@ class PredictionTransform():
         :param image_points: 2-by-num or 3-by-num in pixel, used for computing loss
         :param tform_image_to_tool: transformation from image coordinates to tool coordinates, usually obtained from calibration
         :param tform_image_mm_to_tool: transformation from image coordinates (mm) to tool coordinates
+        :param tform_image_pixel_to_mm: transformation from image coordinates (pixel) to image coordinates (mm)
         """
 
         self.pred_type = pred_type
@@ -131,18 +141,20 @@ class PredictionTransform():
         self.image_points = image_points
         self.tform_image_to_tool = tform_image_to_tool
         self.tform_image_mm_to_tool = tform_image_mm_to_tool
+        self.tform_image_pixel_to_mm = tform_image_pixel_to_mm
         self.image_points_in_tool = torch.matmul(self.tform_image_to_tool,self.image_points)
         self.tform_tool_to_image = torch.linalg.inv(self.tform_image_to_tool)
         self.tform_tool_to_image_mm = torch.linalg.inv(self.tform_image_mm_to_tool)
+        self.tform_image_mm_to_pixel = torch.linalg.inv(self.tform_image_pixel_to_mm) 
 
 
         if self.pred_type=="point":
             if self.label_type=="point":
                 self.call_function = self.point_to_point
             elif self.label_type=="parameter":
-                self.call_function = self.point_to_parameter
+                raise("Not supported!")
             elif self.label_type=="transform":
-                self.call_function = self.point_to_transform
+                raise("Not supported!")
             else:
                 raise('Unknown label_type!')
             
@@ -161,7 +173,8 @@ class PredictionTransform():
                 if self.label_type=="point":
                     self.call_function = self.transform_to_point
                 elif self.label_type=="parameter":
-                    self.call_function = self.transform_to_parameter
+                # as the prediction is not constrained to be Orthogonal Matrix, the transformation cannot converted into 6DOF parameter using functions in pytorch3d
+                    raise('Not supported!')
                 elif self.label_type == "transform":
                     self.call_function = self.transform_to_transform
 
@@ -210,28 +223,13 @@ class PredictionTransform():
         
         for i in range(pts.size()[0]):
             for j in range(pts.size()[1]):
-                ret_R, ret_t = rigid_transform_3D(self.image_points[0:3,:],pts[i,j,0:3,:])
+                ret_R, ret_t = rigid_transform_3D(torch.matmul(self.tform_image_pixel_to_mm,self.image_points)[0:3,:],pts[i,j,0:3,:])
                 transf[i,j,...] = torch.cat((ret_R,ret_t),1)
         # ret_R, ret_t = rigid_transform_3D(self.image_points_in_tool[0:3,:].repeat(pts.size()[0],pts.size()[1],1,1),pts[:,:,0:3,:])
         
         Rotation = pytorch3d.transforms.matrix_to_euler_angles(transf[:,:,0:3, 0:3], 'ZYX')
         params = torch.cat((Rotation, transf[:,:,0:3, 3]),2)
         return params
-    
-    def point_to_transform(self, pts):
-        pts = pts.reshape(pts.shape[0],self.num_pairs,3,-1)
-        last_rows = torch.unsqueeze(torch.ones_like(pts[:,:,0,:]),2)
-        
-        pts = torch.cat((pts,last_rows), axis=2)
-        transf = torch.ones_like(pts)
-    
-        for i in range(pts.size()[0]):
-            for j in range(pts.size()[1]):
-                ret_R, ret_t = rigid_transform_3D(self.image_points[0:3,:],pts[i,j,0:3,:])
-                transf[i,j,0:3,:] = torch.cat((ret_R,ret_t),1)
-                transf[i,j,3,:] = torch.tensor([0,0,0,1])
-
-        return transf
         
 
     def point_to_point(self,pts):
@@ -261,7 +259,7 @@ class PredictionTransform():
             last_rows
             ), axis=2)
         
-        return torch.matmul(_tforms, self.image_points)[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
+        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm, self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
 
     def parameter_to_parameter(self,params):
         return params
@@ -269,46 +267,37 @@ class PredictionTransform():
     def parameter_to_point(self,params):
         # 'ZYX'
         _tforms = self.param_to_transform(params)
-        # the same as the following function
-        # _tforms = pytorch3d.transforms.euler_angles_to_matrix(params, 'ZYX')
 
-        return torch.matmul(_tforms, self.image_points)[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
+        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm, self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
     
 
-    def quaternion_to_parameter(self,quaternion): 
-        params = pytorch3d.transforms.quaternion_to_axis_angle(quaternion[:,:,0:4])
-        params = torch.cat((params,quaternion[:,:,4:7]), axis=2)
-        return params
+    
     
     def quaternion_to_transform(self,quaternion): 
-        params = self.quaternion_to_parameter(quaternion)
-        tforms = self.param_to_transform(params)
+        tforms = pytorch3d.transforms.quaternion_to_matrix(quaternion)
         return tforms
+    
+    def quaternion_to_parameter(self,quaternion): 
+        tforms = pytorch3d.transforms.quaternion_to_matrix(quaternion)
+        params = self.transform_to_parameter(tforms[:,:,0:3,:].reshape(tforms.shape[0],self.num_pairs,-1))
+        return params
     
     def quaternion_to_point(self,quaternion):
         tforms = self.quaternion_to_transform(quaternion)
         points = self.transform_to_point(tforms[:,:,0:3,:].reshape(tforms.shape[0],self.num_pairs,-1))
         return points
 
-
-
-
-    @staticmethod
-    def param_to_transform(params):
+    def param_to_transform(self,params):
         # params: (batch,ch,6), "ch": num_pairs, "6":rx,ry,rz,tx,ty,tz
-        # this function is equal to utils-->tran426_tensor/tran426_np, seq = 'ZYX'
-        cos_x = torch.cos(params[...,2])
-        sin_x = torch.sin(params[...,2])
-        cos_y = torch.cos(params[...,1])
-        sin_y = torch.sin(params[...,1])
-        cos_z = torch.cos(params[...,0])
-        sin_z = torch.sin(params[...,0])
-        return torch.cat((
-            torch.stack([cos_y*cos_z, sin_x*sin_y*cos_z-cos_x*sin_z,  cos_x*sin_y*cos_z+sin_x*sin_z,  params[...,3]], axis=2)[:,:,None,:],
-            torch.stack([cos_y*sin_z, sin_x*sin_y*sin_z+cos_x*cos_z,  cos_x*sin_y*sin_z-sin_x*cos_z,  params[...,4]], axis=2)[:,:,None,:],
-            torch.stack([-sin_y,      sin_x*cos_y,                    cos_x*cos_y,                    params[...,5]], axis=2)[:,:,None,:],
-            torch.cat((torch.zeros_like(params[...,0:3])[...,None,:], torch.ones_like(params[...,0])[...,None,None]), axis=3)
+        matrix = pytorch3d.transforms.euler_angles_to_matrix(params[...,0:3], 'ZYX')
+        transform = torch.cat((matrix,params[...,3:][...,None]),axis=3)
+        last_rows = torch.cat((torch.zeros_like(matrix[0,0,:,0]),torch.ones_like(params[0,0,0:1])),axis=0).expand(list(matrix.shape[0:2])[0],list(matrix.shape[0:2])[1],1,4)
+        _tforms = torch.cat((
+            transform,
+            last_rows
             ), axis=2)
+        
+        return _tforms
 
 
 
@@ -356,15 +345,18 @@ class PointTransform:
                 label_type=None,
                 image_points=None,
                 tform_image_to_tool=None,
-                tform_image_mm_to_tool = None):
+                tform_image_mm_to_tool = None,
+                tform_image_pixel_to_mm = None):
         self.label_type = label_type
         self.tform_image_to_tool = tform_image_to_tool
         self.tform_image_mm_to_tool = tform_image_mm_to_tool
+        self.tform_image_pixel_to_mm = tform_image_pixel_to_mm
         self.image_points = image_points
         # pre-compute reference points in tool coordinates
         self.image_points_in_tool = torch.matmul(self.tform_image_to_tool,self.image_points)
         self.tform_tool_to_image = torch.linalg.inv(self.tform_image_to_tool)
         self.tform_tool_to_image_mm = torch.linalg.inv(self.tform_image_mm_to_tool)
+        self.tform_image_mm_to_pixel = torch.linalg.inv(self.tform_image_pixel_to_mm)
 
         if self.label_type=="point":        
             self.call_function = self.point_to_point
@@ -385,7 +377,7 @@ class PointTransform:
         return pts
     
     def transform_to_point(self,_tforms):
-        return torch.matmul(_tforms, self.image_points)[:,:,0:3,:]
+        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]
     
     def parameter_to_point(self,params):
         # 'ZYX'
@@ -393,21 +385,16 @@ class PointTransform:
         # the same as the following function
         # _tforms = pytorch3d.transforms.euler_angles_to_matrix(params, 'ZYX')
 
-        return torch.matmul(_tforms, self.image_points)[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
+        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
     
-    @staticmethod
-    def param_to_transform(params):
+    def param_to_transform(self,params):
         # params: (batch,ch,6), "ch": num_pairs, "6":rx,ry,rz,tx,ty,tz
-        # this function is equal to utils-->tran426_tensor/tran426_np, seq = 'ZYX'
-        cos_x = torch.cos(params[...,2])
-        sin_x = torch.sin(params[...,2])
-        cos_y = torch.cos(params[...,1])
-        sin_y = torch.sin(params[...,1])
-        cos_z = torch.cos(params[...,0])
-        sin_z = torch.sin(params[...,0])
-        return torch.cat((
-            torch.stack([cos_y*cos_z, sin_x*sin_y*cos_z-cos_x*sin_z,  cos_x*sin_y*cos_z+sin_x*sin_z,  params[...,3]], axis=2)[:,:,None,:],
-            torch.stack([cos_y*sin_z, sin_x*sin_y*sin_z+cos_x*cos_z,  cos_x*sin_y*sin_z-sin_x*cos_z,  params[...,4]], axis=2)[:,:,None,:],
-            torch.stack([-sin_y,      sin_x*cos_y,                    cos_x*cos_y,                    params[...,5]], axis=2)[:,:,None,:],
-            torch.cat((torch.zeros_like(params[...,0:3])[...,None,:], torch.ones_like(params[...,0])[...,None,None]), axis=3)
+        matrix = pytorch3d.transforms.euler_angles_to_matrix(params[...,0:3], 'ZYX')
+        transform = torch.cat((matrix,params[...,3:][...,None]),axis=3)
+        last_rows = torch.cat((torch.zeros_like(matrix[0,0,:,0]),torch.ones_like(params[0,0,0:1])),axis=0).expand(list(matrix.shape[0:2])[0],list(matrix.shape[0:2])[1],1,4)
+        _tforms = torch.cat((
+            transform,
+            last_rows
             ), axis=2)
+        
+        return _tforms

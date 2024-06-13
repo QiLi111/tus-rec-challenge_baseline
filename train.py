@@ -74,7 +74,8 @@ transform_label = LabelTransform(
     pairs=data_pairs,
     image_points=image_points,
     tform_image_to_tool=tform_calib.to(device),
-    tform_image_mm_to_tool=tform_calib_R_T.to(device)
+    tform_image_mm_to_tool=tform_calib_R_T.to(device),
+    tform_image_pixel_to_mm = tform_calib_scale.to(device)
     )
 
 transform_prediction = PredictionTransform(
@@ -83,13 +84,15 @@ transform_prediction = PredictionTransform(
     num_pairs=data_pairs.shape[0],
     image_points=image_points,
     tform_image_to_tool=tform_calib.to(device),
-    tform_image_mm_to_tool=tform_calib_R_T.to(device)
+    tform_image_mm_to_tool=tform_calib_R_T.to(device),
+    tform_image_pixel_to_mm = tform_calib_scale.to(device)
     )
 transform_into_points = PointTransform(
     label_type=opt.LABEL_TYPE,
     image_points=image_points,
     tform_image_to_tool=tform_calib.to(device),
-    tform_image_mm_to_tool=tform_calib_R_T.to(device)
+    tform_image_mm_to_tool=tform_calib_R_T.to(device),
+    tform_image_pixel_to_mm = tform_calib_scale.to(device)
     )
 
 ## network

@@ -4,8 +4,8 @@ class TrainOptions(BaseOptions):
     def initialize(self):
         BaseOptions.initialize(self)
 
-        self.parser.add_argument('--PRED_TYPE', type=str,default='parameter',help='network output type: {"transform", "parameter", "point"}')
-        self.parser.add_argument('--LABEL_TYPE', type=str,default='point',help='label type: {"point", "parameter"}')
+        self.parser.add_argument('--PRED_TYPE', type=str,default='quaternion',help='network output type: {"transform", "parameter", "point", "quaternion"}')
+        self.parser.add_argument('--LABEL_TYPE', type=str,default='parameter',help='label type: {"point", "parameter", "transform"}')
         self.parser.add_argument('--NUM_SAMPLES', type=int,default=10,help='number of input frames/imgs')
         self.parser.add_argument('--SAMPLE_RANGE', type=int,default=10,help='from which the input frames/imgs are selected from')
         self.parser.add_argument('--NUM_PRED', type=int,default=9,help='to those frames/imgs, transformation matrix are predicted ')

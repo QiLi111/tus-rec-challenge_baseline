@@ -274,11 +274,17 @@ class PredictionTransform():
     
     
     def quaternion_to_transform(self,quaternion): 
-        tforms = pytorch3d.transforms.quaternion_to_matrix(quaternion)
-        return tforms
+        tforms = pytorch3d.transforms.quaternion_to_matrix(quaternion[:,:,0:4])
+        transform = torch.cat((tforms,quaternion[...,4:][...,None]),axis=3)
+        last_rows = torch.cat((torch.zeros_like(tforms[0,0,:,0]),torch.ones_like(quaternion[0,0,0:1])),axis=0).expand(list(tforms.shape[0:2])[0],list(tforms.shape[0:2])[1],1,4)
+        _tforms = torch.cat((
+            transform,
+            last_rows
+            ), axis=2)
+        return _tforms
     
     def quaternion_to_parameter(self,quaternion): 
-        tforms = pytorch3d.transforms.quaternion_to_matrix(quaternion)
+        tforms = self.quaternion_to_transform(quaternion)
         params = self.transform_to_parameter(tforms[:,:,0:3,:].reshape(tforms.shape[0],self.num_pairs,-1))
         return params
     

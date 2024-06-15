@@ -73,7 +73,7 @@ class Evaluation():
         self.model.train(False)
 
         # evaluation metrics initialisation
-        # store prediction for all scans in .h5 file    
+        # ========= Store prediction for all scans in a .h5 file =========     
         # Global displacement vectors for pixel reconstruction
         self.Prediction_Global_AllPts_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_AllPts_keys_only.h5"),'a')
         # Global displacement vectors for landmark reconstruction
@@ -83,7 +83,7 @@ class Evaluation():
         # Local displacement vectors for landmark reconstruction
         self.Prediction_Local_Landmark_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_Landmark_keys_only.h5"),'a')
         
-        # store ground truth for all scans in .h5 file
+        # ========= Store ground truth for all scans in .h5 file ========= 
         # when testing, this is not visible for participants
         # Global displacement vectors for pixel reconstruction
         self.Labels_Global_AllPts = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Global_AllPts.h5"),'a')
@@ -94,8 +94,14 @@ class Evaluation():
         # Local displacement vectors for landmark reconstruction
         self.Labels_Local_Landmark = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Local_Landmark.h5"),'a')
         
+        # ========= Store ground truth for all scans in .h5 file ========= 
+        # when testing, this is not visible for participants
+        # Global displacement vectors for four corner points reconstruction
+        self.Labels_Global_Four = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Global_Four.h5"),'a')
+        
+
     def generate_pred_keys(self,scan_index):
-        # generate keys for the prediction h5 file, each key representing a scan in one subject, initialised with []
+        # generate keys for the "Prediction*.h5 file, each key representing a scan in one subject, initialised with []
         # this is to indicate how the dataset looks like in test sets
         initial_value = np.array([])
         _,_,indices, scan_name = self.dset[scan_index]
@@ -114,6 +120,18 @@ class Evaluation():
         self.Prediction_Local_Landmark_keys_only.flush()
         self.Prediction_Local_Landmark_keys_only.close()
 
+    def close_pred_files(self):
+        self.Prediction_Global_AllPts.flush()
+        self.Prediction_Global_AllPts.close()
+        self.Prediction_Global_Landmark.flush()
+        self.Prediction_Global_Landmark.close()
+        self.Prediction_Local_AllPts.flush()
+        self.Prediction_Local_AllPts.close()
+        self.Prediction_Local_Landmark.flush()
+        self.Prediction_Local_Landmark.close()
+        self.Prediction_Global_Four.flush()
+        self.Prediction_Global_Four.close()
+
     def close_label_files(self):
         self.Labels_Global_AllPts.flush()
         self.Labels_Global_AllPts.close()
@@ -123,6 +141,8 @@ class Evaluation():
         self.Labels_Local_AllPts.close()
         self.Labels_Local_Landmark.flush()
         self.Labels_Local_Landmark.close()
+        self.Labels_Global_Four.flush()
+        self.Labels_Global_Four.close()
 
     def calculate_GT_DDF(self, scan_index):
         # calculate DDF of ground truth - label
@@ -140,7 +160,7 @@ class Evaluation():
         self.cal_label_local_landmark(frames,tforms,tforms_inv,indices,scan_name,landmark)
 
     def cal_label_globle_allpts(self,frames,tforms,tforms_inv,indices,scan_name):
-        # global recosntruction error on all points
+        # global recosntruction on all points
         data_pairs_all = data_pairs_adjacent(frames.shape[1])[1:,:]
         transform_label_global_all = LabelTransform(
             "point",
@@ -159,10 +179,25 @@ class Evaluation():
         # DDF in mm, from current frame to frame 0
         labels_global_allpts_DDF = labels_global_allpts - torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(labels_global_allpts.shape[0],-1,-1)
         labels_global_allpts_DDF = labels_global_allpts_DDF.cpu().numpy()
+        
+        # select 4 corner point to plot the trajectory of the scan
+        # can use self.image_points to check the correctness, i.e., self.image_points[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+        #  this should be tensor(
+        # [[  1., 640.,   1., 640.],
+        # [  1.,   1., 480., 480.],
+        # [  0.,   0.,   0.,   0.],
+        # [  1.,   1.,   1.,   1.]])
+        labels_global_four = labels_global_allpts[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]].cpu().numpy()
+        # add the first frame
+        first_frame_coord_all = torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:]
+        first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
+        labels_global_four = np.concatenate((first_frame_coord,labels_global_four),axis = 0)
+        
         self.Labels_Global_AllPts.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_global_allpts_DDF.shape, dtype=labels_global_allpts_DDF.dtype, data=labels_global_allpts_DDF)
-    
+        self.Labels_Global_Four.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_global_four.shape, dtype=labels_global_four.dtype, data=labels_global_four)
+
     def cal_label_globle_landmark(self,frames,tforms,tforms_inv,indices,scan_name,landmark):
-        # global recosntruction error on landmark points
+        # global recosntruction on landmark points
 
         # generate required transformations
         data_pairs_landmark = torch.tensor([[0,n0] for n0 in landmark[:,0]])
@@ -186,7 +221,7 @@ class Evaluation():
         self.Labels_Global_Landmark.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_global_landmark_DDF.shape, dtype=labels_global_landmark_DDF.dtype, data=labels_global_landmark_DDF)
 
     def cal_label_local_allpts(self,frames,tforms,tforms_inv,indices,scan_name):
-        # local recosntruction error on all points
+        # local recosntruction on all points
         # local transformation means the transformation from current frame to the immediate previous frame
         data_pairs_local_all = data_pairs_local(frames.shape[1]-1)
         transform_label_local_all = LabelTransform(
@@ -239,11 +274,12 @@ class Evaluation():
         self.Prediction_Global_Landmark = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_Landmark.h5"),'a')
         self.Prediction_Local_AllPts = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_AllPts.h5"),'a')
         self.Prediction_Local_Landmark = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_Landmark.h5"),'a')
-    
+        self.Prediction_Global_Four = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_Four.h5"),'a')
+
     def generate_pred_values(self, scan_index):
-        # calculate DDF of prediction, and then save it into the key-values pair in prediction h5 file
-        # when testing, only images and the keys (stored in .h5 file) are avaliable, tforms are not avaliable
-        # Paticipants can get the structure of the test set is to use the keys in the prediction h5 file
+        # calculate DDF of prediction, and then save it into .h5 file
+        # when testing, only images and the keys (stored in pre-defined "Prediction*.h5" file) are avaliable, tforms are not avaliable
+        # Paticipants can get the structure of the test set, by using the keys in the "Prediction.h5"
         
         scan_name_all = list(self.Prediction_Global_AllPts_keys_only.keys()) # data structure of the test set
         # load the file containing frames, using keys predefined in "Prediction*.h5" file
@@ -261,12 +297,11 @@ class Evaluation():
         self.cal_pred_globle_landmark(transformation_global,landmark,scan_name_all,scan_index)
         self.cal_pred_local_allpts(transformation_local,scan_name_all,scan_index)
         self.cal_pred_local_landmark(transformation_local,landmark,scan_name_all,scan_index)
-        # plot scan
-        self.scan_plot(frames,scan_name_all,scan_index)
+
 
     def cal_pred_globle_allpts(self,frames,scan_name_all,scan_index):
         # generate global displacement vectors for pixel reconstruction
-        
+        # NOTE: when self.opt.NUM_SAMPLES is larger than 2, the coords of the last (self.opt.NUM_SAMPLES-2) frames will not be generated
         predictions_global_allpts = np.zeros((frames.shape[1]-1,3,self.image_points.shape[-1]))
         # save local transformation, i.e., transformation from current frame to the immediate previous frame
         transformation_local = torch.zeros(frames.shape[1]-1,4,4)
@@ -275,8 +310,8 @@ class Evaluation():
 
 
         prev_transf = torch.eye(4).to(self.device)
-        idx_f0 = 0  #  this is the reference frame for network prediction
-        Pair_index = 0 #select which pair of prediction to be used
+        idx_f0 = 0  # this is the reference frame for network prediction
+        Pair_index = 0 # select which pair of prediction to be used
         # idx_p0 = idx_f0 + torch.squeeze(self.data_pairs[0])[0]  # this is the reference frame for transformaing others to
         # idx_p1 = idx_f0 + torch.squeeze(self.data_pairs[0])[1] # an example to use transformation from frame 1 to frame 0
         interval_pred = torch.squeeze(self.data_pairs[Pair_index])[1] - torch.squeeze(self.data_pairs[Pair_index])[0]
@@ -295,20 +330,28 @@ class Evaluation():
 
 
             idx_f0 += interval_pred
-            # idx_p1 += interval_pred
+            # NOTE: Due to this break, when self.opt.NUM_SAMPLES is larger than 2, the coords of the last (self.opt.NUM_SAMPLES-2) frames will not be generated
             if (idx_f0 + self.opt.NUM_SAMPLES) > frames.shape[1]:
                 break
 
         predictions_global_allpts_DDF = predictions_global_allpts -torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(predictions_global_allpts.shape[0],-1,-1).cpu().numpy()
 
+        # store coordinates of four corner points for plot
+        predictions_global_four = predictions_global_allpts[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+        # add the first frame
+        first_frame_coord_all = torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:]
+        first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
+        predictions_global_four = np.concatenate((first_frame_coord,predictions_global_four),axis = 0)
+        
         self.Prediction_Global_AllPts.create_dataset(scan_name_all[scan_index], predictions_global_allpts_DDF.shape, dtype=predictions_global_allpts_DDF.dtype, data=predictions_global_allpts_DDF)
+        self.Prediction_Global_Four.create_dataset(scan_name_all[scan_index], predictions_global_four.shape, dtype=predictions_global_four.dtype, data=predictions_global_four)
 
         return transformation_local, transformation_global
         
     def cal_pred_globle_landmark(self,transformation_global,landmark,scan_name_all,scan_index):
         # generate global displacement vectors for landmark reconstruction
         # transformation_global: transformation from current frame to the first frame
-        # landmark: coordinates of landmark points
+        # landmark: coordinates of landmark points in image coordinate system (in pixel)
 
         pred_global_landmark = torch.zeros(3,len(landmark))
         for i in range(len(landmark)):    
@@ -341,8 +384,9 @@ class Evaluation():
         self.Prediction_Local_Landmark.create_dataset(scan_name_all[scan_index], pred_local_landmark_DDF.shape, dtype=pred_local_landmark_DDF.dtype, data=pred_local_landmark_DDF)
 
    
-    def scan_plot(self,frames,scan_name_all,scan_index):
+    def scan_plot(self,scan_index):
         # plot the scan in 3D
+
         scan_name_all = list(self.Prediction_Global_AllPts_keys_only.keys()) # data structure of the test set
         # load the file containing frames, using keys predefined in "Prediction*.h5" file
         sub = scan_name_all[scan_index].split('__')[0][3:]
@@ -352,27 +396,8 @@ class Evaluation():
         frames = torch.from_numpy(scan_h5['frames'][()])[None,...]
         frames = frames/255
 
-        label = self.Labels_Global_AllPts[scan_name_all[scan_index]][()]
-        pred = self.Prediction_Global_AllPts[scan_name_all[scan_index]][()]
-        # convert DDF to coordinates
-        label = label + torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:].expand(label.shape[0],-1,-1).numpy()
-        pred = pred + torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:].expand(pred.shape[0],-1,-1).numpy()
-
-        # select 4 corner point to plot the trajectory of the scan
-        # can use self.image_points to check the correctness, i.e., self.image_points[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
-        #  this should be tensor(
-        # [[  1., 640.,   1., 640.],
-        # [  1.,   1., 480., 480.],
-        # [  0.,   0.,   0.,   0.],
-        # [  1.,   1.,   1.,   1.]])
-        labels_four = label[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
-        pred_four = pred[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
-        # add the first frame
-        first_frame_coord_all = torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:]
-        first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
-        labels_four = np.concatenate((first_frame_coord,labels_four),axis = 0)
-        pred_four = np.concatenate((first_frame_coord,pred_four),axis = 0)
-
+        labels_four = self.Labels_Global_Four[scan_name_all[scan_index]][()]
+        pred_four = self.Prediction_Global_Four[scan_name_all[scan_index]][()]
         
         saved_img_path = os.path.join(self.opt.PREDICTION_PATH, "imgs")
         if not os.path.exists(saved_img_path):
@@ -381,7 +406,7 @@ class Evaluation():
         frames = torch.squeeze(frames)
         color = ['g','r']
         
-        plot_scan(labels_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50)
-        plot_scan(pred_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50)
+        plot_scan(labels_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50, legend = 'GT')
+        plot_scan(pred_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50, legend = 'Pred')
 
         plot_scan_label_pred(labels_four,pred_four,frames,color,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred_label'),step = frames.shape[0]-1,width = 4, scatter = 8, legend_size=50)

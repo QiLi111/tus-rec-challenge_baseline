@@ -50,7 +50,7 @@ def read_calib_matrices(filename_calib):
         tform_calib[4:8,:]=np.array(txt[6:10]).astype(np.float32)
     return torch.tensor(tform_calib[0:4,:]),torch.tensor(tform_calib[4:8,:]), torch.tensor(tform_calib[4:8,:] @ tform_calib[0:4,:])
 
-def plot_scan(gt,frame,saved_name,step,color,width = 4, scatter = 8, legend_size=50):
+def plot_scan(gt,frame,saved_name,step,color,width = 4, scatter = 8, legend_size=50,legend = None):
     # plot the scan in 3D
 
     fig = plt.figure(figsize=(35,15))
@@ -59,11 +59,11 @@ def plot_scan(gt,frame,saved_name,step,color,width = 4, scatter = 8, legend_size
         axs.append(fig.add_subplot(1,2,i+1,projection='3d'))
     plt.tight_layout()
 
-    plotting(gt,frame,axs,saved_name,step,color,width, scatter, legend_size)
+    plotting(gt,frame,axs,step,color,width, scatter, legend_size,legend = legend)
     plt.savefig(saved_name +'.png')
     plt.close()
 
-def plotting(gt,frame,axs,saved_name,step,color,width = 4, scatter = 8, legend_size=50): 
+def plotting(gt,frame,axs,step,color,width = 4, scatter = 8, legend_size=50,legend = None): 
     # plot surface
     ysize, xsize = frame.shape[-2:]
     grid=np.meshgrid(np.linspace(0,1,ysize),np.linspace(0,1,xsize),indexing='ij')
@@ -82,7 +82,7 @@ def plotting(gt,frame,axs,saved_name,step,color,width = 4, scatter = 8, legend_s
     # plot gt
     gx_all, gy_all, gz_all = [gt[:, ii, :] for ii in range(3)]
     for i,ax in enumerate(axs):
-        ax.scatter(gx_all[...,0], gy_all[...,0], gz_all[...,0],  alpha=0.5, c = color, s=scatter)
+        ax.scatter(gx_all[...,0], gy_all[...,0], gz_all[...,0],  alpha=0.5, c = color, s=scatter, label=legend)
         ax.scatter(gx_all[...,1], gy_all[...,1], gz_all[...,1],  alpha=0.5,c = color, s=scatter)
         ax.scatter(gx_all[...,2], gy_all[...,2], gz_all[...,2],  alpha=0.5, c = color,s=scatter)
         ax.scatter(gx_all[...,3], gy_all[...,3], gz_all[...,3],  alpha=0.5,c = color, s=scatter)
@@ -99,6 +99,7 @@ def plotting(gt,frame,axs,saved_name,step,color,width = 4, scatter = 8, legend_s
 
         ax.axis('equal')
         ax.grid(False)
+        ax.legend(fontsize = legend_size,markerscale = 5,scatterpoints = 5)
         # ax.axis('off')
         ax.set_xlabel('x',fontsize=legend_size)
         ax.set_ylabel('y',fontsize=legend_size)
@@ -120,8 +121,8 @@ def plot_scan_label_pred(gt,pred,frame,color,saved_name,step,width = 4, scatter 
         axs.append(fig.add_subplot(1,2,i+1,projection='3d'))
     plt.tight_layout()
 
-    plotting(gt,frame,axs,saved_name,step,color[0],width = 4, scatter = 8, legend_size=50)
-    plotting(pred,frame,axs,saved_name,step,color[1],width = 4, scatter = 8, legend_size=50)
+    plotting(gt,frame,axs,step,color[0],width = 4, scatter = 8, legend_size=50,legend = 'GT')
+    plotting(pred,frame,axs,step,color[1],width = 4, scatter = 8, legend_size=50,legend = 'Pred')
     
     plt.savefig(saved_name +'.png')
     plt.close()

@@ -14,7 +14,7 @@ DATA_DIR = opt.DATA_PATH
 FILENAME_CALIB = opt.FILENAME_CALIB
 
 # get object names in HDF5 file
-DataSet = h5py.File(os.path.join(DATA_DIR,"001","LH_Par_C_DtP.h5"),'r')    
+DataSet = h5py.File(os.path.join(DATA_DIR,"001","LH_Per_S_PtD.h5"),'r')    
 for key in DataSet.keys():
     print(key) 
     print(type(DataSet[key])) 
@@ -38,5 +38,5 @@ tform_calib_scale, tform_calib_R_T, tform_calib = read_calib_matrices(FILENAME_C
 # get coordinates of four corner points in 3D space, unit mm
 labels_four = torch.matmul(torch.linalg.inv(tform_calib_R_T),torch.matmul(tforms_each_frame2frame0,torch.matmul(tform_calib,points_four)))[:,0:3,...]
 # plot scan trajectory 
-plot_scan(labels_four.numpy(),example_scan,os.getcwd()+'/'+"example",step=len(labels_four)-1,color = 'g')
+plot_scan(labels_four.numpy(),example_scan,os.getcwd()+'/'+"example",step=len(labels_four)-1,color = 'g',width = 4, scatter = 8, legend_size=50,legend = 'GT')
 

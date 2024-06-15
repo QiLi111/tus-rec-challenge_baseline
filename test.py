@@ -6,29 +6,23 @@
 
 # This script is an exmaple to show the evaluation process during FINAL testing, where only "frames" in each scan is accessible, and the "tforms" is not provided.
 # Each folder includes 24 .h5 files, each denoting one scan. In each scan, only "frames" are accessible, denoting all the frames in that scan
-# In order to show clearly the structure of the test dataset, the predicted .h5 file is pre-generated and provided, with keys only.
+# In order to show clearly the structure of the test dataset, the "Prediction*.h5" file is pre-generated and provided, with keys only.
 # The format of keys is "sub%03d_%s" where %03d denotes the subfolder index, and %s denotes the scan name.
-# The paticipants can index the coorsponding .h5 file based on the keys in prediction.h5
-# All the labels (in the format of coordinates) are stored in four .h5 files, for calculating error
-# This script also provide the label generation process. 
+# The paticipants can index the coorsponding "Prediction*.h5" file based on the keys in "Prediction*.h5"
+# All the labels (in the format of coordinates) are stored in four "Labels*.h5" files, for calculating error
+# This script also provide the label generation process, which is only for reference use. The participants are not required to generate the labels.
 
 import os
 import torch
 import json
-import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
 from utils.loader import Dataset
-from utils.network import build_model
-from utils.loss import PointDistance
 from utils.data_process_functions import *
-from utils.transform import LabelTransform, PredictionTransform, PointTransform
 from options.train_options import TrainOptions
 from utils.funs import *
 from utils.evaluation import Evaluation
 
 
 opt = TrainOptions().parse()
-writer = SummaryWriter(os.path.join(opt.SAVE_PATH))
 os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_ids
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -60,10 +54,10 @@ if not os.path.exists(saved_folder_test):
 # During testing, the data path should be mounted to a folder where the testing data is stored
 opt.LABEL_PATH = saved_folder_test # For develop use
 opt.PREDICTION_PATH = saved_folder_test
-# evaluation on training set
+# evaluation on test set
 Evaluation_test = Evaluation(opt,device, dset_test,'best_validation_dist_model',data_pairs)
 # generate labels and predictions keys for each scan - by Challenge Orgnisors (for reference use only)
-# to simulate real testing
+# to simulate real testing - this is not required for the participants during FINAL test/rank
 # for scan_index in range(len(dset_test)):
 #     # generate keys in prediction .h5 file 
 #     Evaluation_test.generate_pred_keys(scan_index)
@@ -74,25 +68,29 @@ Evaluation_test = Evaluation(opt,device, dset_test,'best_validation_dist_model',
 Evaluation_test.close_pred_keys_files()
 # Evaluation_test.close_label_files()
 
-# The following is what the participants need to do - generating four DDF
-# load predifined prediction .h5 
+# ============ The following is what the participants need to do - generating four DDF ============
+# load predifined "Prediction*.h5" 
 Evaluation_test.load_local_h5()
 # generate 4 kinds of predictions, based on the provided keys
 Evaluation_test.generate_prediction_h5()
-for scan_index in range(len(list(Evaluation_test.Prediction_Global_AllPts_keys_only.keys()))):
+for scan_index in range(10,len(list(Evaluation_test.Prediction_Global_AllPts_keys_only.keys()))):
     # predictions
     Evaluation_test.calculate_GT_DDF(scan_index)
     Evaluation_test.generate_pred_values(scan_index)
     Evaluation_test.scan_plot(scan_index)
+Evaluation_test.close_pred_files()
+
 
 
 # evaluation on validation set
 opt.LABEL_PATH = saved_folder_val
 opt.PREDICTION_PATH = saved_folder_val
 Evaluation_val = Evaluation(opt,device, dset_val,'best_validation_dist_model',data_pairs)
+# ....
+
 # evaluation on test set
 opt.LABEL_PATH = saved_folder_test
 opt.PREDICTION_PATH = saved_folder_test
 Evaluation_test = Evaluation(opt,device, dset_test,'best_validation_dist_model',data_pairs)
-
+# ....
 

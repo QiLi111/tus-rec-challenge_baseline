@@ -330,20 +330,13 @@ class TransformAccumulation:
 
 
     def __call__(self, tform_1_to_0, tform_2_to_1):  
-        last_row = torch.zeros_like(tform_1_to_0[None,0,:])
-        last_row[0,3] = 1.0
         
-
-        tform_img1_pixel_to_img0_mm = tform_1_to_0
-        tform_img2_pixel_to_img1_mm = tform_2_to_1
-
-        tform_img2_pixel_to_img0_mm = torch.matmul(tform_img1_pixel_to_img0_mm, torch.matmul(self.tform_image_mm_to_image_pixel,tform_img2_pixel_to_img1_mm))
-
-        if tform_img1_pixel_to_img0_mm.shape[0]>1: # batchsize > 1
-            return torch.matmul(tform_img2_pixel_to_img0_mm,self.image_points[None,...].expand(tform_1_to_0.shape[0], -1, -1))[:, 0:3, :],tform_img2_pixel_to_img0_mm
-            
-        elif tform_img1_pixel_to_img0_mm.shape[0] ==1: # batchsize = 1
-            return torch.matmul(tform_img2_pixel_to_img0_mm,self.image_points),tform_img2_pixel_to_img0_mm
+        tform_img1_mm_to_img0_mm = tform_1_to_0 # transformation from image1 to image0 in mm
+        tform_img2_mm_to_img1_mm = tform_2_to_1
+        # transformation from image2 to image0 in mm
+        tform_img2_mm_to_img0_mm = torch.matmul(tform_img1_mm_to_img0_mm,tform_img2_mm_to_img1_mm)
+        # return point coordinates in image0 in mm, and the transformation from image2 to image0 in mm
+        return torch.matmul(tform_img2_mm_to_img0_mm,torch.matmul(self.tform_image_pixel_to_image_mm,self.image_points)),tform_img2_mm_to_img0_mm
 
 
 class PointTransform:
@@ -392,6 +385,69 @@ class PointTransform:
         # _tforms = pytorch3d.transforms.euler_angles_to_matrix(params, 'ZYX')
 
         return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
+    
+    def param_to_transform(self,params):
+        # params: (batch,ch,6), "ch": num_pairs, "6":rx,ry,rz,tx,ty,tz
+        matrix = pytorch3d.transforms.euler_angles_to_matrix(params[...,0:3], 'ZYX')
+        transform = torch.cat((matrix,params[...,3:][...,None]),axis=3)
+        last_rows = torch.cat((torch.zeros_like(matrix[0,0,:,0]),torch.ones_like(params[0,0,0:1])),axis=0).expand(list(matrix.shape[0:2])[0],list(matrix.shape[0:2])[1],1,4)
+        _tforms = torch.cat((
+            transform,
+            last_rows
+            ), axis=2)
+        
+        return _tforms
+    
+
+class Transform2Transform:
+    # transform into 4*4 transformation matrix
+    def __init__(self,
+                pred_type=None,
+                num_pairs=None,
+                image_points=None,
+                tform_image_to_tool=None,
+                tform_image_mm_to_tool = None,
+                tform_image_pixel_to_mm = None):
+        self.pred_type = pred_type
+        self.num_pairs = num_pairs
+        self.tform_image_to_tool = tform_image_to_tool
+        self.tform_image_mm_to_tool = tform_image_mm_to_tool
+        self.tform_image_pixel_to_mm = tform_image_pixel_to_mm
+        self.image_points = image_points
+        # pre-compute reference points in tool coordinates
+        self.image_points_in_tool = torch.matmul(self.tform_image_to_tool,self.image_points)
+        self.tform_tool_to_image = torch.linalg.inv(self.tform_image_to_tool)
+        self.tform_tool_to_image_mm = torch.linalg.inv(self.tform_image_mm_to_tool)
+        self.tform_image_mm_to_pixel = torch.linalg.inv(self.tform_image_pixel_to_mm)
+
+
+        if self.pred_type=="parameter":
+            self.call_function = self.param_to_transform  
+        
+        elif self.pred_type=="transform":  
+            self.call_function = self.transform_to_transform   
+
+        elif self.pred_type=="point":
+            
+            raise('Not supported!')
+        else:
+            raise('Unknown label_type!')
+        
+    def __call__(self, outputs):
+        preds = outputs.reshape((outputs.shape[0],self.num_pairs,-1))
+        return self.call_function(preds)
+
+    def transform_to_transform(self, transform):
+        last_rows = torch.cat([
+            torch.zeros_like(transform[..., 0])[..., None, None].expand(-1, -1, 1, 3),
+            torch.ones_like(transform[..., 0])[..., None, None]
+            ], axis=3)
+        transform = torch.cat((
+            transform.reshape(-1, self.num_pairs, 3, 4),
+            last_rows
+            ), axis=2)
+
+        return transform
     
     def param_to_transform(self,params):
         # params: (batch,ch,6), "ch": num_pairs, "6":rx,ry,rz,tx,ty,tz

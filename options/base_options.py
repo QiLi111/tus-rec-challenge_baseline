@@ -10,9 +10,10 @@ class BaseOptions():
         self.parser.add_argument('--DATA_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of dataset path')
         self.parser.add_argument('--FILENAME_CALIB', type=str, default="/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet/calib_matrix.csv",help='dataroot of calibration matrix')
         self.parser.add_argument('--LABEL_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of label path for testing set')
-        self.parser.add_argument('--PREDICTION_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet', help='foldername of prediction path for testing set')
+        self.parser.add_argument('--PREDICTION_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/DataSet/Baseline', help='foldername of prediction path for testing set')
+        self.parser.add_argument('--LANDMARK_PATH', type=str, default='/raid/Qi/public_data/forearm_US_large_dataset/TrainData_50_MICCAIChallenge/landmark', help='foldername of label path for testing set')
         self.parser.add_argument('--multi_gpu', type=bool, default=False, help='whether use multi gpus')
-        self.parser.add_argument('--gpu_ids', type=str, default='1', help='gpu id: e.g., 0,1,2...')
+        self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu id: e.g., 0,1,2...')
         self.initialized = True
 
     def parse(self):

@@ -5,7 +5,7 @@ import numpy as np
 import torch.nn.functional as F
 from utils.network import build_model
 from utils.data_process_functions import *
-from utils.transform import LabelTransform, PredictionTransform, PointTransform
+from utils.transform import LabelTransform, PredictionTransform,Transform2Transform,TransformAccumulation
 from utils.loss import PointDistance
 from utils.funs import *
 
@@ -13,24 +13,24 @@ from utils.funs import *
 
 class Evaluation():  
 
-    def __init__(self, opt,device, dset,model_name,data_pairs,saved_folder):
+    def __init__(self, opt,device, dset,model_name,data_pairs):
         self.opt = opt
         self.device = device
         self.dset = dset
-        self.saved_folder = saved_folder
         self.model_name = model_name
-        self.data_pairs = data_pairs.to(device)
+        self.data_pairs = data_pairs.to(self.device)
         self.tform_calib_scale,self.tform_calib_R_T, self.tform_calib = read_calib_matrices(opt.FILENAME_CALIB)
-        # image points coordinates on image coordinate system
-        self.image_points = reference_image_points(self.dset[0][0].shape[1:],2).to(device)
-
-        self.transform_label = LabelTransform(
-            self.opt.LABEL_TYPE,
-            pairs=self.data_pairs,
-            image_points=self.image_points,
-            tform_image_to_tool=self.tform_calib.to(device),
-            tform_image_mm_to_tool=self.tform_calib_R_T.to(device)
-            )
+        # image points coordinates in image coordinate system, all pixel points
+        self.image_points = reference_image_points(self.dset[0][0].shape[1:],self.dset[0][0].shape[1:]).to(device)
+        
+        # self.transform_label = LabelTransform(
+        #     self.opt.LABEL_TYPE,
+        #     pairs=self.data_pairs,
+        #     image_points=self.image_points,
+        #     tform_image_to_tool=self.tform_calib.to(device),
+        #     tform_image_mm_to_tool=self.tform_calib_R_T.to(device),
+        #     tform_image_pixel_to_mm = self.tform_calib_scale.to(device)
+        #     )
 
         self.transform_prediction = PredictionTransform(
             opt.PRED_TYPE,
@@ -38,298 +38,350 @@ class Evaluation():
             num_pairs=self.data_pairs.shape[0],
             image_points=self.image_points,
             tform_image_to_tool=self.tform_calib.to(device),
-            tform_image_mm_to_tool=self.tform_calib_R_T.to(device)
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(device)
             )
+        
+        self.transform_to_transform = Transform2Transform(
+        # transform into 4*4 transformation matrix
+            pred_type=opt.PRED_TYPE,
+            num_pairs=self.data_pairs.shape[0],
+            image_points=self.image_points,
+            tform_image_to_tool=self.tform_calib.to(device),
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(device)
+            )
+        
+        self.transform_accumulation = TransformAccumulation(
+            image_points=self.image_points,
+            tform_image_to_tool=self.tform_calib.to(device),
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(device),
+            tform_image_pixel_to_image_mm = self.tform_calib_scale.to(device)
+            )
+
 
         self.pred_dim = type_dim(self.opt.PRED_TYPE, self.image_points.shape[1], self.data_pairs.shape[0])
         self.label_dim = type_dim(self.opt.LABEL_TYPE, self.image_points.shape[1], self.data_pairs.shape[0])
         
-        
-        ## load the model
         self.model = build_model(
             self.opt,
             in_frames = self.opt.NUM_SAMPLES,
             pred_dim = self.pred_dim,
             ).to(device)
-        
+        ## load the model
         self.model.load_state_dict(torch.load(os.path.join(self.opt.SAVE_PATH,'saved_model', self.model_name),map_location=torch.device(self.device)))
         self.model.train(False)
 
         # evaluation metrics initialisation
-
-        self.Global_AllPts = [] # Global displacement vectors for pixel reconstruction
-        self.Global_Landmark = [] # Global displacement vectors for landmark reconstruction
-        self.Local_AllPts = [] # Local displacement vectors for pixel reconstruction
-        self.Local_Landmark = [] # Local displacement vectors for landmark reconstruction
         # store prediction for all scans in .h5 file    
-        self.Global_AllPts = h5py.File(os.path.join(self.saved_folder,"Global_AllPts.h5"),'a')
-        self.Global_Landmark = h5py.File(os.path.join(self.saved_folder,"Global_Landmark.h5"),'a')
-        self.Local_AllPts = h5py.File(os.path.join(self.saved_folder,"Local_AllPts.h5"),'a')
-        self.Local_Landmark = h5py.File(os.path.join(self.saved_folder,"Local_Landmark.h5"),'a')
+        # Global displacement vectors for pixel reconstruction
+        self.Prediction_Global_AllPts_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_AllPts_keys_only.h5"),'a')
+        # Global displacement vectors for landmark reconstruction
+        self.Prediction_Global_Landmark_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_Landmark_keys_only.h5"),'a')
+        # Local displacement vectors for pixel reconstruction
+        self.Prediction_Local_AllPts_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_AllPts_keys_only.h5"),'a')
+        # Local displacement vectors for landmark reconstruction
+        self.Prediction_Local_Landmark_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_Landmark_keys_only.h5"),'a')
+        
         # store ground truth for all scans in .h5 file
         # when testing, this is not visible for participants
-        self.labels = h5py.File(os.path.join(self.saved_folder,"labels.h5"),'a')
-    
-    def generate_keys(self,scan_index):
+        # Global displacement vectors for pixel reconstruction
+        self.Labels_Global_AllPts = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Global_AllPts.h5"),'a')
+        # Global displacement vectors for landmark reconstruction
+        self.Labels_Global_Landmark = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Global_Landmark.h5"),'a')
+        # Local displacement vectors for pixel reconstruction
+        self.Labels_Local_AllPts = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Local_AllPts.h5"),'a')
+        # Local displacement vectors for landmark reconstruction
+        self.Labels_Local_Landmark = h5py.File(os.path.join(self.opt.LABEL_PATH,"Labels_Local_Landmark.h5"),'a')
+        
+    def generate_pred_keys(self,scan_index):
         # generate keys for the prediction h5 file, each key representing a scan in one subject, initialised with []
         # this is to indicate how the dataset looks like in test sets
-        initial_value = []
+        initial_value = np.array([])
         _,_,indices, scan_name = self.dset[scan_index]
-        self.Global_AllPts.create_dataset('/sub%03d_%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
-        self.Global_Landmark.create_dataset('/sub%03d_%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
-        self.Local_AllPts.create_dataset('/sub%03d_%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
-        self.Local_Landmark.create_dataset('/sub%03d_%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
+        self.Prediction_Global_AllPts_keys_only.create_dataset('/sub%03d__%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
+        self.Prediction_Global_Landmark_keys_only.create_dataset('/sub%03d__%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
+        self.Prediction_Local_AllPts_keys_only.create_dataset('/sub%03d__%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
+        self.Prediction_Local_Landmark_keys_only.create_dataset('/sub%03d__%s' % (indices[0],scan_name), len(initial_value), dtype=initial_value.dtype, data=initial_value)
     
-    def close_files(self):
-        self.Global_AllPts.flush()
-        self.Global_AllPts.close()
-        self.Global_Landmark.flush()
-        self.Global_Landmark.close()
-        self.Local_AllPts.flush()
-        self.Local_AllPts.close()
-        self.Local_Landmark.flush()
-        self.Local_Landmark.close()
-        self.labels.flush()
-        self.labels.close()
+    def close_pred_keys_files(self):
+        self.Prediction_Global_AllPts_keys_only.flush()
+        self.Prediction_Global_AllPts_keys_only.close()
+        self.Prediction_Global_Landmark_keys_only.flush()
+        self.Prediction_Global_Landmark_keys_only.close()
+        self.Prediction_Local_AllPts_keys_only.flush()
+        self.Prediction_Local_AllPts_keys_only.close()
+        self.Prediction_Local_Landmark_keys_only.flush()
+        self.Prediction_Local_Landmark_keys_only.close()
+
+    def close_label_files(self):
+        self.Labels_Global_AllPts.flush()
+        self.Labels_Global_AllPts.close()
+        self.Labels_Global_Landmark.flush()
+        self.Labels_Global_Landmark.close()
+        self.Labels_Local_AllPts.flush()
+        self.Labels_Local_AllPts.close()
+        self.Labels_Local_Landmark.flush()
+        self.Labels_Local_Landmark.close()
 
     def calculate_GT_DDF(self, scan_index):
         # calculate DDF of ground truth - label
-        # when testing, this is not visible for participants
+        # when testing, this is not visible for participants, 
+        # this function is to show how the label looks like in the test set
         frames, tforms, indices, scan_name = self.dset[scan_index]
         frames, tforms = (torch.tensor(t)[None,...].to(self.device) for t in [frames, tforms])
         tforms_inv = torch.linalg.inv(tforms)
+        landmark_file = h5py.File(os.path.join(self.opt.LANDMARK_PATH,"landmark_%03d.h5" %indices[0]), 'r')
+        landmark = torch.from_numpy(landmark_file[scan_name][()])
 
-        data_pairs_all = data_pairs_adjacent(frames.shape[1])
-        data_pairs_all=torch.tensor(data_pairs_all) 
-        transform_label_all = LabelTransform(
+        self.cal_label_globle_allpts(frames,tforms,tforms_inv,indices,scan_name)
+        self.cal_label_globle_landmark(frames,tforms,tforms_inv,indices,scan_name,landmark)
+        self.cal_label_local_allpts(frames,tforms,tforms_inv,indices,scan_name)
+        self.cal_label_local_landmark(frames,tforms,tforms_inv,indices,scan_name,landmark)
+
+    def cal_label_globle_allpts(self,frames,tforms,tforms_inv,indices,scan_name):
+        # global recosntruction error on all points
+        data_pairs_all = data_pairs_adjacent(frames.shape[1])[1:,:]
+        transform_label_global_all = LabelTransform(
             "point",
-            pairs=self.data_pairs,
+            pairs=data_pairs_all,
             image_points=self.image_points,
             tform_image_to_tool=self.tform_calib.to(self.device),
-            tform_image_mm_to_tool=self.tform_calib_R_T.to(self.device)
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(self.device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(self.device)
             )
         
-        tforms_each_frame2frame0_gt = transform_label_all(tforms, tforms_inv)
-        labels = torch.matmul(tforms_each_frame2frame0_gt,self.image_points)[:,:,0:3,...]
+        # tforms_each_frame2frame0_gt = transform_label_global_all(tforms, tforms_inv)
+        # # coordinates of points in frame 0 coordinate system (mm), global recosntruction  
+        # labels_global_allpts = torch.matmul(tforms_each_frame2frame0_gt,torch.matmul(self.tform_calib_scale.to(self.device),self.image_points))[:,:,0:3,...]
+        # coordinates of all points in frame 0 coordinate system (mm), global recosntruction  
+        labels_global_allpts = torch.squeeze(transform_label_global_all(tforms, tforms_inv))
+        # DDF in mm, from current frame to frame 0
+        labels_global_allpts_DDF = labels_global_allpts - torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(labels_global_allpts.shape[0],-1,-1)
+        labels_global_allpts_DDF = labels_global_allpts_DDF.cpu().numpy()
+        self.Labels_Global_AllPts.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_global_allpts_DDF.shape, dtype=labels_global_allpts_DDF.dtype, data=labels_global_allpts_DDF)
+    
+    def cal_label_globle_landmark(self,frames,tforms,tforms_inv,indices,scan_name,landmark):
+        # global recosntruction error on landmark points
+
+        # generate required transformations
+        data_pairs_landmark = torch.tensor([[0,n0] for n0 in landmark[:,0]])
+        transform_label_global_landmark = LabelTransform(
+            "transform",
+            pairs=data_pairs_landmark,
+            image_points=self.image_points,
+            tform_image_to_tool=self.tform_calib.to(self.device),
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(self.device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(self.device)
+            )
         
-        self.labels.create_dataset('/sub%03d_%s' % (indices[0],scan_name), labels.shape, dtype=labels.dtype, data=labels)
+        tforms_each_frame2frame0_gt = torch.squeeze(transform_label_global_landmark(tforms, tforms_inv))
+        # coordinates of landmark points in frame 0 coordinate system (mm), global recosntruction  
+        labels_global_landmark = torch.zeros(3,len(landmark))
+        for i in range(len(landmark)):
+            pts_coord = torch.cat((landmark[i][1:], torch.FloatTensor([0,1])),axis = 0).to(self.device)
+            labels_global_landmark[:,i] = torch.matmul(tforms_each_frame2frame0_gt[i],torch.matmul(self.tform_calib_scale.to(self.device),pts_coord))[0:3]-torch.matmul(self.tform_calib_scale.to(self.device),pts_coord)[0:3]
+        
+        labels_global_landmark_DDF = labels_global_landmark.cpu().numpy()
+        self.Labels_Global_Landmark.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_global_landmark_DDF.shape, dtype=labels_global_landmark_DDF.dtype, data=labels_global_landmark_DDF)
+
+    def cal_label_local_allpts(self,frames,tforms,tforms_inv,indices,scan_name):
+        # local recosntruction error on all points
+        # local transformation means the transformation from current frame to the immediate previous frame
+        data_pairs_local_all = data_pairs_local(frames.shape[1]-1)
+        transform_label_local_all = LabelTransform(
+            "point",
+            pairs=data_pairs_local_all,
+            image_points=self.image_points,
+            tform_image_to_tool=self.tform_calib.to(self.device),
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(self.device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(self.device)
+            )
+        
+        labels_local_allpts = transform_label_local_all(tforms, tforms_inv)
+        labels_local_allpts = torch.squeeze(labels_local_allpts)
+        labels_local_allpts_DDF = labels_local_allpts-torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(labels_local_allpts.shape[0],-1,-1)
+        labels_local_allpts_DDF = labels_local_allpts_DDF.cpu().numpy()
+        
+        self.Labels_Local_AllPts.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_local_allpts_DDF.shape, dtype=labels_local_allpts_DDF.dtype, data=labels_local_allpts_DDF)
+
+    def cal_label_local_landmark(self,frames,tforms,tforms_inv,indices,scan_name,landmark):
+        # generate required transformations
+        data_pairs_local_landmark = torch.tensor([[n0-1,n0] for n0 in landmark[:,0]])
+        transform_label_local_landmark = LabelTransform(
+            "transform",
+            pairs=data_pairs_local_landmark,
+            image_points=self.image_points,
+            tform_image_to_tool=self.tform_calib.to(self.device),
+            tform_image_mm_to_tool=self.tform_calib_R_T.to(self.device),
+            tform_image_pixel_to_mm = self.tform_calib_scale.to(self.device)
+            )
+        
+        tforms_each_frame_to_prev_frame = torch.squeeze(transform_label_local_landmark(tforms, tforms_inv))
+        # coordinates of landmark points in previous frame coordinate system (mm), local recosntruction  
+        labels_local_landmark = torch.zeros(3,len(landmark))
+        for i in range(len(landmark)):
+            pts_coord = torch.cat((landmark[i][1:], torch.FloatTensor([0,1])),axis = 0).to(self.device)
+            labels_local_landmark[:,i] = torch.matmul(tforms_each_frame_to_prev_frame[i],torch.matmul(self.tform_calib_scale.to(self.device),pts_coord))[0:3]-torch.matmul(self.tform_calib_scale.to(self.device),pts_coord)[0:3]
+        
+        labels_local_landmark_DDF = labels_local_landmark.cpu().numpy()
+        self.Labels_Local_Landmark.create_dataset('/sub%03d__%s' % (indices[0],scan_name), labels_local_landmark_DDF.shape, dtype=labels_local_landmark_DDF.dtype, data=labels_local_landmark_DDF)
 
 
-    def calculate_predicted_DDF(self, scan_index,saved_folder):
-        # calculate DDF of prediction, and then save it into the key-values= pair in prediction h5 file
+    def load_local_h5(self):
+        self.Prediction_Global_AllPts_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_AllPts_keys_only.h5"),'r')
+        self.Prediction_Global_Landmark_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_Landmark_keys_only.h5"),'r')
+        self.Prediction_Local_AllPts_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_AllPts_keys_only.h5"),'r')
+        self.Prediction_Local_Landmark_keys_only = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_Landmark_keys_only.h5"),'r')
+    
+    def generate_prediction_h5(self):
+        self.Prediction_Global_AllPts = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_AllPts.h5"),'a')
+        self.Prediction_Global_Landmark = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Global_Landmark.h5"),'a')
+        self.Prediction_Local_AllPts = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_AllPts.h5"),'a')
+        self.Prediction_Local_Landmark = h5py.File(os.path.join(self.opt.PREDICTION_PATH,"Prediction_Local_Landmark.h5"),'a')
+    
+    def generate_pred_values(self, scan_index):
+        # calculate DDF of prediction, and then save it into the key-values pair in prediction h5 file
         # when testing, only images and the keys (stored in .h5 file) are avaliable, tforms are not avaliable
-        # one way to get the structure of the test set is to use the keys in the prediction h5 file
-        dataset_test = h5py.File(os.path.join(self.opt.PREDICTION_PATH,'Global_AllPts'), 'r')
-        scan_name_all = dataset_test.keys() # data structure of the test set
-        for i in range(scan_name_all):
-            scan = h5py.File(os.path.join(self.opt.DATA_PATH,scan_name_all[i].split('_')[0][3:],scan_name_all[i].split('_')[1]), 'r')
-
-            frames, tforms, scan_name = self.dset[scan_index]
-            frames, tforms = (torch.tensor(t)[None,...].to(self.device) for t in [frames, tforms])
-            tforms_inv = torch.linalg.inv(tforms)
-            frames = frames/255
-            saved_folder = saved_folder
-
-            idx = 0
-            while True:
-                idx_f0 = 0  #  this is the reference frame for network prediction
-                idx_p0 = idx_f0   # this is the reference frame for transformaing others to
-                idx_p1 = idx_f0 + torch.squeeze(self.data_pairs[0])[1] # an example to use transformation from frame 1 to frame 0
-                interval_pred = torch.squeeze(self.data_pairs[0])[1] - torch.squeeze(self.data_pairs[0])[0]
-
-                if (idx + self.opt.NUM_SAMPLES) > frames.shape[1]:
-                    break
-
-                frames_sub = frames[:,idx:idx + self.opt.NUM_SAMPLES, ...]
-                tforms_sub = tforms[:,idx:idx + self.opt.NUM_SAMPLES, ...]
-                tforms_inv_sub = tforms_inv[:,idx:idx + self.opt.NUM_SAMPLES, ...]
-
-                with torch.no_grad():
-                    outputs = self.model(frames_sub)
-                    pred_transfs = self.transform_prediction(outputs)
-
-                    # make the predicted transformations are based on frame 0
-                    predframe0 = torch.eye(4,4)[None,...].repeat(pred_transfs.shape[0],1, 1,1).to(self.device)
-                    pred_transfs = torch.cat((predframe0,pred_transfs),1)
-
-                    # calculate local transformation
-                    pred_transfs_0 = pred_transfs[:,0:-1,...]
-                    pred_transfs_1 = pred_transfs[:,1:,...]
-                    pred_transfs_local = torch.matmul(torch.linalg.inv(pred_transfs_0),pred_transfs_1)
-                    pred_transfs_local = torch.matmul(transf_0,pred_transfs_local)
-                    pred_transfs_local = torch.cat((predframe0,pred_transfs_local),1)
-                
-
-
-                if idx !=0:
-                    # if not the first sub-sequence, should be transformed into frame 0
-                    tforms_each_frame2frame0_gt_sub = torch.matmul(tform_last_frame[None,...],tforms_each_frame2frame0_gt_sub)
-                    pred_transfs = torch.matmul(tform_last_frame_pred[None,...],pred_transfs) 
-
-                    tforms_each_frame2frame0_gt_sub_local = torch.matmul(tform_last_frame_local[None,...],tforms_each_frame2frame0_gt_sub_local)
-                    pred_transfs_local = torch.matmul(tform_last_frame_pred_local[None,...],pred_transfs_local) 
-
-                
-                tform_last_frame = tforms_each_frame2frame0_gt_sub[:,-1,...]
-                tform_last_frame_pred = pred_transfs[:,-1,...]
-
-                tform_last_frame_local = tforms_each_frame2frame0_gt_sub_local[:,-1,...]
-                tform_last_frame_pred_local = pred_transfs_local[:,-1,...]
-
-                # obtain the coordinates of each frame, using frame 0 as the reference frame
-                if self.opt.img_pro_coord == 'img_coord':
-                    labels_gt_sub = torch.matmul(torch.linalg.inv(self.tform_calib_R_T),torch.matmul(tforms_each_frame2frame0_gt_sub,torch.matmul(self.tform_calib,self.all_points)))[:,:,0:3,...]
-                    # transformtion to points
-                    pred_pts_sub = torch.matmul(torch.linalg.inv(self.tform_calib_R_T),torch.matmul(pred_transfs,torch.matmul(self.tform_calib,self.all_points)))[:,:,0:3,...]
-
-                    labels_gt_sub_local = torch.matmul(torch.linalg.inv(self.tform_calib_R_T),torch.matmul(tforms_each_frame2frame0_gt_sub_local,torch.matmul(self.tform_calib,self.all_points)))[:,:,0:3,...]
-                    pred_pts_sub_local = torch.matmul(torch.linalg.inv(self.tform_calib_R_T),torch.matmul(pred_transfs_local,torch.matmul(self.tform_calib,self.all_points)))[:,:,0:3,...]
-
-
-                    
-                
-                else:
-                    labels_gt_sub = torch.matmul(tforms_each_frame2frame0_gt_sub,torch.matmul(self.tform_calib,self.all_points))[:,:,0:3,...]
-                    # transformtion to points
-                    pred_pts_sub = torch.matmul(pred_transfs,torch.matmul(self.tform_calib,self.all_points))[:,:,0:3,...]
-                    
-                    labels_gt_sub_local = torch.matmul(tforms_each_frame2frame0_gt_sub_local,torch.matmul(self.tform_calib,self.all_points))[:,:,0:3,...]
-                    # transformtion to points
-                    pred_pts_sub_local = torch.matmul(pred_transfs_local,torch.matmul(self.tform_calib,self.all_points))[:,:,0:3,...]
-
-
-
-                    # for coordinates system change use
-                    ori_pts_sub = torch.matmul(tforms_each_frame2frame0_gt_sub,torch.matmul(self.tform_calib,self.all_points)).permute(0,1,3,2)
-                    pre_sub = torch.matmul(pred_transfs,torch.matmul(self.tform_calib,self.all_points)).permute(0,1,3,2)
-                    # obtain points in optimised coodinates system, and the coorsponding transformation matrix
-                    labels_gt_sub_opt, pred_pts_sub_opt,convR_batched,minxyz_all = self.ConvPose(labels_gt_sub, ori_pts_sub, pre_sub, 'auto_PCA',self.device)
-
-                    ori_pts_sub_local = torch.matmul(tforms_each_frame2frame0_gt_sub_local,torch.matmul(self.tform_calib,self.all_points)).permute(0,1,3,2)
-                    pre_sub_local = torch.matmul(pred_transfs_local,torch.matmul(self.tform_calib,self.all_points)).permute(0,1,3,2)
-                    
-
-
-                # this is the warpped prediction, represented in optimised coordinates system
-                # as there will be common frame in two US sequence, when produce DDF, only one DDF should be generated
-                if idx == 0:
-                    labels_gt_sub_non_overlap_opt = labels_gt_sub_opt
-                    pred_pts_sub_non_overlap_opt = pred_pts_sub_opt
-                    frames_sub_non_overlap = frames_sub
-                else:
-                    labels_gt_sub_non_overlap_opt = labels_gt_sub_opt[:,1:,...]
-                    pred_pts_sub_non_overlap_opt = pred_pts_sub_opt[:,1:,...]
-                    frames_sub_non_overlap = frames_sub[:,1:,...]
-
-                pred_pts_warped_sub_opt,common_volume = self.intepolation_and_registration_for_each_patch(labels_gt_sub_non_overlap_opt,pred_pts_sub_non_overlap_opt,frames_sub_non_overlap,option = based_volume)
-                # convert it into origial coordinates system
-                pred_pts_warped_sub_pro = self.convert_from_optimised_to_origin(pred_pts_warped_sub_opt,minxyz_all,convR_batched,labels_gt_sub_non_overlap_opt,common_volume,option = based_volume)
-                pred_pts_warped_sub = pred_pts_warped_sub_pro.permute(0,1,3,2)[:,:,0:3,:]
-                
-
-            # warped_pred_sub = self.warp_pred(pred_pts_sub,labels_gt_sub,frames_sub)
-            # warped_pred_sub = torch.squeeze(warped_pred_sub,0)
-            if idx ==0:
-                # points in original coordinates system
-                labels_gt = labels_gt_sub
-                pred_pts = pred_pts_sub
-                pred_pts_warped = pred_pts_warped_sub
-
-                labels_gt_local = labels_gt_sub_local 
-                pred_pts_local = pred_pts_sub_local 
-
-                ori_pts = ori_pts_sub
-                pre = pre_sub
-                pred_warped = pred_pts_warped_sub_pro
-
-                ori_pts_local = ori_pts_sub_local
-                pre_local = pre_sub_local
-
-                
-            else:
-                labels_gt = torch.cat((labels_gt,labels_gt_sub[:,1:,...]),1)
-                pred_pts = torch.cat((pred_pts,pred_pts_sub[:,1:,...]),1)
-                pred_pts_warped = torch.cat((pred_pts_warped,pred_pts_warped_sub),1)
-
-                labels_gt_local = torch.cat((labels_gt_local,labels_gt_sub_local[:,1:,...]),1)
-                pred_pts_local = torch.cat((pred_pts_local,pred_pts_sub_local[:,1:,...]),1)
-
-                ori_pts = torch.cat((ori_pts,ori_pts_sub[:,1:,...]),1)
-                pre = torch.cat((pre,pre_sub[:,1:,...]),1)
-
-                ori_pts_local = torch.cat((ori_pts_local,ori_pts_sub_local[:,1:,...]),1)
-                pre_local = torch.cat((pre_local,pre_sub_local[:,1:,...]),1)
-
-                pred_warped = torch.cat((pred_warped,pred_pts_warped_sub_pro),1)
-
-            if self.option == 'generate_reg_volume_data':
-                idx += 1
-            elif self.option == "reconstruction_vlume":
-                idx += (self.opt.NUM_SAMPLES-1)
-
-        # compute evaluation metrix, given ground truth points, predicted points, and warpped points
-        # global transformation on all points
+        # Paticipants can get the structure of the test set is to use the keys in the prediction h5 file
         
-        # # compute common frame for comparision with other methods
-        # common_idx = (int(frames.shape[1]/self.opt.NUM_SAMPLES)-1)*self.opt.NUM_SAMPLES-int(frames.shape[1]/self.opt.NUM_SAMPLES)+1+1
-
-        # the following is not need as the sequence start from the second sequence
-        # pred_pts = pred_pts[0,100:,...][None,...]
-        # labels_gt = labels_gt[0,100:,...][None,...]
-        # pred_pts_warped = pred_pts_warped[0,100:,...][None,...]
-        # pred_pts_local = pred_pts_local[0,100:,...][None,...]
-        # labels_gt_local = labels_gt_local[0,100:,...][None,...]
-
-        T_global_all_dist = ((pred_pts-labels_gt)**2).sum(dim=2).sqrt().mean().item()
-        # self.metrics(pred_pts,labels_gt).item()
-        T_R_wrap_global_all_dist = ((pred_pts_warped-labels_gt)**2).sum(dim=2).sqrt().mean().item()
-        # self.metrics(pred_pts_warped,labels_gt).item()
-        T_local_all_dist = ((pred_pts_local-labels_gt_local)**2).sum(dim=2).sqrt().mean().item()
-
-        # global transoformation on four corner points
-        # pred_pts_four = pred_pts[...,[0,self.dset[0][0].shape[2],(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2]+1,-1]]
-        # labels_gt_four = labels_gt[...,[0,self.dset[0][0].shape[2],(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2]+1,-1]]
+        scan_name_all = list(self.Prediction_Global_AllPts_keys_only.keys()) # data structure of the test set
+        # load the file containing frames, using keys predefined in "Prediction*.h5" file
+        sub = scan_name_all[scan_index].split('__')[0][3:]
+        scan_name = scan_name_all[scan_index].split('__')[1]
+        scan_h5 = h5py.File(os.path.join(self.opt.DATA_PATH,sub,scan_name+'.h5'), 'r')
         
-        pred_pts_four = pred_pts[...,[0,self.dset[0][0].shape[2]-1,(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2],-1]]
-        labels_gt_four = labels_gt[...,[0,self.dset[0][0].shape[2]-1,(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2],-1]]
-        pred_pts_warped_four = pred_pts_warped[...,[0,self.dset[0][0].shape[2]-1,(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2],-1]]
-        # pred_pts_four_o = pred_pts_four[0,[99-1,198-1,297-1,396-1,495-1],...]
-        pred_pts_four_local = pred_pts_local[...,[0,self.dset[0][0].shape[2]-1,(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2],-1]]
-        labels_gt_four_local = labels_gt_local[...,[0,self.dset[0][0].shape[2]-1,(self.dset[0][0].shape[1]-1)*self.dset[0][0].shape[2],-1]]
+        frames = torch.from_numpy(scan_h5['frames'][()])[None,...]
+        frames = frames/255
+
+        landmark_file = h5py.File(os.path.join(self.opt.LANDMARK_PATH,"landmark_%s.h5" %sub), 'r')
+        landmark = torch.from_numpy(landmark_file[scan_name][()])
+
+        transformation_local, transformation_global = self.cal_pred_globle_allpts(frames,scan_name_all,scan_index)
+        self.cal_pred_globle_landmark(transformation_global,landmark,scan_name_all,scan_index)
+        self.cal_pred_local_allpts(transformation_local,scan_name_all,scan_index)
+        self.cal_pred_local_landmark(transformation_local,landmark,scan_name_all,scan_index)
+        # plot scan
+        self.scan_plot(frames,scan_name_all,scan_index)
+
+    def cal_pred_globle_allpts(self,frames,scan_name_all,scan_index):
+        # generate global displacement vectors for pixel reconstruction
         
-        # the following is not need as the sequence start from the second sequence
-        # pred_pts_four = pred_pts_four[0,100:,...][None,...]
-        # labels_gt_four = labels_gt_four[0,100:,...][None,...]
-        # pred_pts_warped_four = pred_pts_warped_four[0,100:,...][None,...]
-        # pred_pts_four_local = pred_pts_four_local[0,100:,...][None,...]
-        # labels_gt_four_local = labels_gt_four_local[0,100:,...][None,...]
+        predictions_global_allpts = np.zeros((frames.shape[1]-1,3,self.image_points.shape[-1]))
+        # save local transformation, i.e., transformation from current frame to the immediate previous frame
+        transformation_local = torch.zeros(frames.shape[1]-1,4,4)
+        # save global transformation, i.e., transformation from current frame to the first frame
+        transformation_global = torch.zeros(frames.shape[1]-1,4,4)
 
 
-        T_global_four_dist = ((pred_pts_four-labels_gt_four)**2).sum(dim=2).sqrt().mean().item()
-        T_R_wrap_global_four_dist = ((pred_pts_warped_four-labels_gt_four)**2).sum(dim=2).sqrt().mean().item()
-        T_local_four_dist = ((pred_pts_four_local-labels_gt_four_local)**2).sum(dim=2).sqrt().mean().item()
-        # global difference on all points
-        self.T_Global_AllPts_Dist.append(T_global_all_dist)
-        self.T_R_Warp_Global_AllPts_Dist.append(T_R_wrap_global_all_dist)
-        self.T_Local_AllPts_Dist.append(T_local_all_dist)
+        prev_transf = torch.eye(4).to(self.device)
+        idx_f0 = 0  #  this is the reference frame for network prediction
+        Pair_index = 0 #select which pair of prediction to be used
+        # idx_p0 = idx_f0 + torch.squeeze(self.data_pairs[0])[0]  # this is the reference frame for transformaing others to
+        # idx_p1 = idx_f0 + torch.squeeze(self.data_pairs[0])[1] # an example to use transformation from frame 1 to frame 0
+        interval_pred = torch.squeeze(self.data_pairs[Pair_index])[1] - torch.squeeze(self.data_pairs[Pair_index])[0]
 
-        # global difference on four corner points
-        self.T_Global_FourPts_Dist.append(T_global_four_dist)
-        self.T_R_Warp_Global_FourPts_Dist.append(T_R_wrap_global_four_dist)
-        self.T_Local_FourPts_Dist.append(T_local_four_dist)
+        while True:
+            
+            frames_sub = frames[:,idx_f0:idx_f0 + self.opt.NUM_SAMPLES, ...].to(self.device)
+            with torch.no_grad():
+                outputs = self.model(frames_sub)
+                # transform prediction into transformtion, to be accumulated
+                preds_transf = self.transform_to_transform(outputs)[0,Pair_index,...] # use the transformtion from image 1 to 0
+                transformation_local[idx_f0] = preds_transf
+                pts_cord, prev_transf = self.transform_accumulation(prev_transf,preds_transf)
+                transformation_global[idx_f0] = prev_transf
+                predictions_global_allpts[idx_f0] = pts_cord.cpu().numpy()[0:3,...] # global displacement vectors for pixel reconstruction
 
 
-        # # plot trajactory based on four corner points
-        self.plot_scan(labels_gt_four,pred_pts_four,frames[:,:labels_gt_four.shape[1],...],saved_folder+'/'+saved_name+'_T_global')
-        self.plot_scan(labels_gt_four,pred_pts_warped_four,frames[:,:labels_gt_four.shape[1],...],saved_folder+'/'+saved_name+'_TR_global')
-        self.plot_scan(labels_gt_four_local,pred_pts_four_local,frames[:,:labels_gt_four.shape[1],...],saved_folder+'/'+saved_name+'_T_local')
+            idx_f0 += interval_pred
+            # idx_p1 += interval_pred
+            if (idx_f0 + self.opt.NUM_SAMPLES) > frames.shape[1]:
+                break
+
+        predictions_global_allpts_DDF = predictions_global_allpts -torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(predictions_global_allpts.shape[0],-1,-1).cpu().numpy()
+
+        self.Prediction_Global_AllPts.create_dataset(scan_name_all[scan_index], predictions_global_allpts_DDF.shape, dtype=predictions_global_allpts_DDF.dtype, data=predictions_global_allpts_DDF)
+
+        return transformation_local, transformation_global
+        
+    def cal_pred_globle_landmark(self,transformation_global,landmark,scan_name_all,scan_index):
+        # generate global displacement vectors for landmark reconstruction
+        # transformation_global: transformation from current frame to the first frame
+        # landmark: coordinates of landmark points
+
+        pred_global_landmark = torch.zeros(3,len(landmark))
+        for i in range(len(landmark)):    
+            pts_coord = torch.cat((landmark[i][1:], torch.FloatTensor([0,1])),axis = 0).to(self.device)
+            pred_global_landmark[:,i] = torch.matmul(transformation_global[landmark[i][0]-1].to(self.device),torch.matmul(self.tform_calib_scale.to(self.device),pts_coord))[0:3]-torch.matmul(self.tform_calib_scale.to(self.device),pts_coord)[0:3]
+    
+        pred_global_landmark_DDF = pred_global_landmark.cpu().numpy()
+
+        self.Prediction_Global_Landmark.create_dataset(scan_name_all[scan_index], pred_global_landmark_DDF.shape, dtype=pred_global_landmark_DDF.dtype, data=pred_global_landmark_DDF)
+    
+    def cal_pred_local_allpts(self,transformation_local,scan_name_all,scan_index):
+        # generate local displacement vectors for pixel reconstruction
+        prediction_local_allpts = torch.matmul(transformation_local.to(self.device),torch.matmul(self.tform_calib_scale.to(self.device),self.image_points))
+        prediction_local_allpts_DDF = prediction_local_allpts[:,0:3,:]-torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(prediction_local_allpts.shape[0],-1,-1)
+        prediction_local_allpts_DDF = prediction_local_allpts_DDF.cpu().numpy()
+        
+        self.Prediction_Local_AllPts.create_dataset(scan_name_all[scan_index], prediction_local_allpts_DDF.shape, dtype=prediction_local_allpts_DDF.dtype, data=prediction_local_allpts_DDF)
+
+
+    def cal_pred_local_landmark(self,transformation_local,landmark,scan_name_all,scan_index):
+        # generate local displacement vectors for landmark reconstruction
+
+        pred_local_landmark = torch.zeros(3,len(landmark))
+        for i in range(len(landmark)):    
+            pts_coord = torch.cat((landmark[i][1:], torch.FloatTensor([0,1])),axis = 0).to(self.device)
+            pred_local_landmark[:,i] = torch.matmul(transformation_local[landmark[i][0]-1].to(self.device),torch.matmul(self.tform_calib_scale.to(self.device),pts_coord))[0:3]-torch.matmul(self.tform_calib_scale.to(self.device),pts_coord)[0:3]
+    
+        pred_local_landmark_DDF = pred_local_landmark.cpu().numpy()
+
+        self.Prediction_Local_Landmark.create_dataset(scan_name_all[scan_index], pred_local_landmark_DDF.shape, dtype=pred_local_landmark_DDF.dtype, data=pred_local_landmark_DDF)
+
+   
+    def scan_plot(self,frames,scan_name_all,scan_index):
+        # plot the scan in 3D
+        scan_name_all = list(self.Prediction_Global_AllPts_keys_only.keys()) # data structure of the test set
+        # load the file containing frames, using keys predefined in "Prediction*.h5" file
+        sub = scan_name_all[scan_index].split('__')[0][3:]
+        scan_name = scan_name_all[scan_index].split('__')[1]
+        scan_h5 = h5py.File(os.path.join(self.opt.DATA_PATH,sub,scan_name+'.h5'), 'r')
+        
+        frames = torch.from_numpy(scan_h5['frames'][()])[None,...]
+        frames = frames/255
+
+        label = self.Labels_Global_AllPts[scan_name_all[scan_index]][()]
+        pred = self.Prediction_Global_AllPts[scan_name_all[scan_index]][()]
+        # convert DDF to coordinates
+        label = label + torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:].expand(label.shape[0],-1,-1).numpy()
+        pred = pred + torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:].expand(pred.shape[0],-1,-1).numpy()
+
+        # select 4 corner point to plot the trajectory of the scan
+        # can use self.image_points to check the correctness, i.e., self.image_points[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+        #  this should be tensor(
+        # [[  1., 640.,   1., 640.],
+        # [  1.,   1., 480., 480.],
+        # [  0.,   0.,   0.,   0.],
+        # [  1.,   1.,   1.,   1.]])
+        labels_four = label[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+        pred_four = pred[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+        # add the first frame
+        first_frame_coord_all = torch.matmul(self.tform_calib_scale,self.image_points.cpu())[0:3,:]
+        first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
+        labels_four = np.concatenate((first_frame_coord,labels_four),axis = 0)
+        pred_four = np.concatenate((first_frame_coord,pred_four),axis = 0)
 
         
+        saved_img_path = os.path.join(self.opt.PREDICTION_PATH, "imgs")
+        if not os.path.exists(saved_img_path):
+            os.makedirs(saved_img_path)
 
-
-
-
-
-                
+        frames = torch.squeeze(frames)
+        color = ['g','r']
         
+        plot_scan(labels_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50)
+        plot_scan(pred_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50)
 
+        plot_scan_label_pred(labels_four,pred_four,frames,color,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred_label'),step = frames.shape[0]-1,width = 4, scatter = 8, legend_size=50)

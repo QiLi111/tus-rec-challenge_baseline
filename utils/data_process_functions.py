@@ -35,6 +35,11 @@ def data_pairs_adjacent(num_frames):
     
     return torch.tensor([[0,n0] for n0 in range(num_frames)])
 
+def data_pairs_local(num_frames):
+    # obtain the data_pairs to compute the tarnsfomration between frames and the reference (the immediate previous) frame
+    
+    return torch.tensor([[n0,n0+1] for n0 in range(num_frames)])
+
 def read_calib_matrices(filename_calib):
     # read the calibration matrices from the csv file
     # T{image->tool} = T{image_mm -> tool} * T{image_pix -> image_mm}}
@@ -45,7 +50,7 @@ def read_calib_matrices(filename_calib):
         tform_calib[4:8,:]=np.array(txt[6:10]).astype(np.float32)
     return torch.tensor(tform_calib[0:4,:]),torch.tensor(tform_calib[4:8,:]), torch.tensor(tform_calib[4:8,:] @ tform_calib[0:4,:])
 
-def plot_scan(gt,frame,saved_name,step,width = 4, scatter = 8, legend_size=50):
+def plot_scan(gt,frame,saved_name,step,color,width = 4, scatter = 8, legend_size=50):
     # plot the scan in 3D
 
     fig = plt.figure(figsize=(35,15))
@@ -53,7 +58,12 @@ def plot_scan(gt,frame,saved_name,step,width = 4, scatter = 8, legend_size=50):
     for i in range(2):
         axs.append(fig.add_subplot(1,2,i+1,projection='3d'))
     plt.tight_layout()
-    
+
+    plotting(gt,frame,axs,saved_name,step,color,width, scatter, legend_size)
+    plt.savefig(saved_name +'.png')
+    plt.close()
+
+def plotting(gt,frame,axs,saved_name,step,color,width = 4, scatter = 8, legend_size=50): 
     # plot surface
     ysize, xsize = frame.shape[-2:]
     grid=np.meshgrid(np.linspace(0,1,ysize),np.linspace(0,1,xsize),indexing='ij')
@@ -72,19 +82,19 @@ def plot_scan(gt,frame,saved_name,step,width = 4, scatter = 8, legend_size=50):
     # plot gt
     gx_all, gy_all, gz_all = [gt[:, ii, :] for ii in range(3)]
     for i,ax in enumerate(axs):
-        ax.scatter(gx_all[...,0], gy_all[...,0], gz_all[...,0],  alpha=0.5, c = 'b', s=scatter)
-        ax.scatter(gx_all[...,1], gy_all[...,1], gz_all[...,1],  alpha=0.5,c = 'r', s=scatter)
-        ax.scatter(gx_all[...,2], gy_all[...,2], gz_all[...,2],  alpha=0.5, c = 'g',s=scatter)
-        ax.scatter(gx_all[...,3], gy_all[...,3], gz_all[...,3],  alpha=0.5,c = 'k', s=scatter)
+        ax.scatter(gx_all[...,0], gy_all[...,0], gz_all[...,0],  alpha=0.5, c = color, s=scatter)
+        ax.scatter(gx_all[...,1], gy_all[...,1], gz_all[...,1],  alpha=0.5,c = color, s=scatter)
+        ax.scatter(gx_all[...,2], gy_all[...,2], gz_all[...,2],  alpha=0.5, c = color,s=scatter)
+        ax.scatter(gx_all[...,3], gy_all[...,3], gz_all[...,3],  alpha=0.5,c = color, s=scatter)
         # plot the first frame and the last frame
-        plt.plot(gt[0,0,0:2], gt[0,1,0:2], gt[0,2,0:2], 'b', linewidth = width)
-        plt.plot(gt[0,0,[1,3]], gt[0,1,[1,3]], gt[0,2,[1,3]], 'b', linewidth = width) 
-        plt.plot(gt[0,0,[3,2]], gt[0,1,[3,2]], gt[0,2,[3,2]], 'b', linewidth = width) 
-        plt.plot(gt[0,0,[2,0]], gt[0,1,[2,0]], gt[0,2,[2,0]], 'b', linewidth = width)
-        plt.plot(gt[-1,0,0:2], gt[-1,1,0:2], gt[-1,2,0:2], 'r', linewidth = width)
-        plt.plot(gt[-1,0,[1,3]], gt[-1,1,[1,3]], gt[-1,2,[1,3]], 'r', linewidth = width) 
-        plt.plot(gt[-1,0,[3,2]], gt[-1,1,[3,2]], gt[-1,2,[3,2]], 'r', linewidth = width) 
-        plt.plot(gt[-1,0,[2,0]], gt[-1,1,[2,0]], gt[-1,2,[2,0]], 'r', linewidth = width)
+        ax.plot(gt[0,0,0:2], gt[0,1,0:2], gt[0,2,0:2], 'b', linewidth = width)
+        ax.plot(gt[0,0,[1,3]], gt[0,1,[1,3]], gt[0,2,[1,3]], 'b', linewidth = width) 
+        ax.plot(gt[0,0,[3,2]], gt[0,1,[3,2]], gt[0,2,[3,2]], 'b', linewidth = width) 
+        ax.plot(gt[0,0,[2,0]], gt[0,1,[2,0]], gt[0,2,[2,0]], 'b', linewidth = width)
+        ax.plot(gt[-1,0,0:2], gt[-1,1,0:2], gt[-1,2,0:2], 'r', linewidth = width)
+        ax.plot(gt[-1,0,[1,3]], gt[-1,1,[1,3]], gt[-1,2,[1,3]], 'r', linewidth = width) 
+        ax.plot(gt[-1,0,[3,2]], gt[-1,1,[3,2]], gt[-1,2,[3,2]], 'r', linewidth = width) 
+        ax.plot(gt[-1,0,[2,0]], gt[-1,1,[2,0]], gt[-1,2,[2,0]], 'r', linewidth = width)
 
 
         ax.axis('equal')
@@ -101,7 +111,18 @@ def plot_scan(gt,frame,saved_name,step,width = 4, scatter = 8, legend_size=50):
             ax.view_init(30,30,0)
 
 
+def plot_scan_label_pred(gt,pred,frame,color,saved_name,step,width = 4, scatter = 8, legend_size=50):
+    # plot the scan in 3D
+
+    fig = plt.figure(figsize=(35,15))
+    axs=[]
+    for i in range(2):
+        axs.append(fig.add_subplot(1,2,i+1,projection='3d'))
+    plt.tight_layout()
+
+    plotting(gt,frame,axs,saved_name,step,color[0],width = 4, scatter = 8, legend_size=50)
+    plotting(pred,frame,axs,saved_name,step,color[1],width = 4, scatter = 8, legend_size=50)
+    
     plt.savefig(saved_name +'.png')
     plt.close()
-
                 

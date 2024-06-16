@@ -302,7 +302,7 @@ class Evaluation():
     def cal_pred_globle_allpts(self,frames,scan_name_all,scan_index):
         # generate global displacement vectors for pixel reconstruction
         # NOTE: when self.opt.NUM_SAMPLES is larger than 2, the coords of the last (self.opt.NUM_SAMPLES-2) frames will not be generated
-        predictions_global_allpts = np.zeros((frames.shape[1]-1,3,self.image_points.shape[-1]))
+        predictions_global_allpts = torch.zeros((frames.shape[1]-1,3,self.image_points.shape[-1]))
         # save local transformation, i.e., transformation from current frame to the immediate previous frame
         transformation_local = torch.zeros(frames.shape[1]-1,4,4)
         # save global transformation, i.e., transformation from current frame to the first frame
@@ -326,7 +326,7 @@ class Evaluation():
                 transformation_local[idx_f0] = preds_transf
                 pts_cord, prev_transf = self.transform_accumulation(prev_transf,preds_transf)
                 transformation_global[idx_f0] = prev_transf
-                predictions_global_allpts[idx_f0] = pts_cord.cpu().numpy()[0:3,...] # global displacement vectors for pixel reconstruction
+                predictions_global_allpts[idx_f0] = pts_cord[0:3,...].cpu() # global displacement vectors for pixel reconstruction
 
 
             idx_f0 += interval_pred
@@ -334,7 +334,15 @@ class Evaluation():
             if (idx_f0 + self.opt.NUM_SAMPLES) > frames.shape[1]:
                 break
 
-        predictions_global_allpts_DDF = predictions_global_allpts -torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(predictions_global_allpts.shape[0],-1,-1).cpu().numpy()
+        if self.opt.NUM_SAMPLES > 2:
+            # NOTE As not all frames will be reconstructed, the paticipants could use interpolation or some other methods to fill the missing frames
+            # This baseline method provides a simple way to fill the missing frames, by using the last reconstructed frame to fill the missing frames
+            transformation_local[idx_f0:,...] = torch.eye(4).expand(transformation_local[idx_f0:,...].shape[0],-1,-1)
+            transformation_global[idx_f0:,...] = transformation_global[idx_f0-1].expand(transformation_global[idx_f0:,...].shape[0],-1,-1)
+            predictions_global_allpts[idx_f0:,...] = predictions_global_allpts[idx_f0-1].expand(predictions_global_allpts[idx_f0:,...].shape[0],-1,-1)
+
+
+        predictions_global_allpts_DDF = predictions_global_allpts.numpy() -torch.matmul(self.tform_calib_scale.to(self.device),self.image_points)[0:3,:].expand(predictions_global_allpts.shape[0],-1,-1).cpu().numpy()
 
         # store coordinates of four corner points for plot
         predictions_global_four = predictions_global_allpts[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
@@ -405,8 +413,8 @@ class Evaluation():
 
         frames = torch.squeeze(frames)
         color = ['g','r']
-        
+        # plot label and prediction separately
         plot_scan(labels_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50, legend = 'GT')
         plot_scan(pred_four,frames,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50, legend = 'Pred')
-
+        # plot label and prediction in the same figure 
         plot_scan_label_pred(labels_four,pred_four,frames,color,os.path.join(saved_img_path,scan_name_all[scan_index]+'_pred_label'),step = frames.shape[0]-1,width = 4, scatter = 8, legend_size=50)

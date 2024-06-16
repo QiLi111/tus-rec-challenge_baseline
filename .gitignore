@@ -21,8 +21,8 @@ log/
 loader_merge.py
 data_merge.py
 results*/
-submission.py
-submission_funs.py
+submission*.py
+submission_funs*.py
 
 
 

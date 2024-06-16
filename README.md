@@ -3,12 +3,6 @@ This is the official baseline code for TUS-REC Challenge - MICCAI2024
 
 Refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551) for more information about the algorithm.
 
-> [!IMPORTANT]  
-> The code currently includes only the training process; the testing code will be coming soon in 2~3 weeks.
-
-> [!NOTE]  
->When testing, the algorithm is expected to take the entire scan as input and output two different sets of transformation-representing displacement vectors as results, a set of displacement vectors on individual pixels and a set of displacement vectors on provided landmarks. There is no requirement on how the algorithm is designed internally, for example, whether it is learning-based method; frame-, sequence- or scan-based processing; or, rigid-, affine- or nonrigid transformation assumptions. 
-
 ## Install conda environment
 ``` bash
 conda create -n freehand-US python=3.9.13
@@ -24,7 +18,7 @@ For instance, the network can predict the transformation between two US frames a
 ### Code Structure
 ```
 ├── train.py # Training script 
-├── test.py # Testing script 
+├── generate_DDF.py # Generate 4 kinds of DDF 
 ├── data_process.py # An example of data load and scan plot
 ├── utils # Utility scripts 
 │ ├── transform.py # Transformation functions
@@ -34,10 +28,11 @@ For instance, the network can predict the transformation between two US frames a
 │ ├── funs.py # Functions used during training
 │ ├── data_process_functions.py # Functions used during data processing
 │ ├── rigid_transform_3D.py # Adapted transformation function
+│ ├── evaluation.py # functions used during DDF generation
 ├── options # Model hyperparameter 
 │ ├── base_options.py # Hyperparameters for dataroot and GPU
 │ └── train_options.py # Hyperparameters for training and testing
-├── requirements # packages for environment installation
+├── requirements.txt # packages for environment installation
 ```
 
 ### Train
@@ -50,12 +45,12 @@ For instance, the network can predict the transformation between two US frames a
     python3 train.py --NUM_SAMPLES 10 --SAMPLE_RANGE 10 --NUM_PRED 9 --PRED_TYPE parameter --LABEL_TYPE point --DATA_PATH Path/To/Dataset --FILENAME_CALIB Path/To/Calibration_matrix
     ```
 
-### Test (coming soon)
+### Generate DDF
 * Case 1:
     ``` bash
-    python3 test.py --NUM_SAMPLES 2 --SAMPLE_RANGE 2 --NUM_PRED 1 --PRED_TYPE parameter --LABEL_TYPE point --DATA_PATH Path/To/Dataset --FILENAME_CALIB Path/To/Calibration_matrix
+    python3 generate_DDF.py --NUM_SAMPLES 2 --SAMPLE_RANGE 2 --NUM_PRED 1 --PRED_TYPE parameter --LABEL_TYPE point --DATA_PATH Path/To/Dataset --FILENAME_CALIB Path/To/Calibration_matrix
     ``` 
 * Case 2:
     ``` bash
-    python3 test.py --NUM_SAMPLES 10 --SAMPLE_RANGE 10 --NUM_PRED 9 --PRED_TYPE parameter --LABEL_TYPE point --DATA_PATH Path/To/Dataset --FILENAME_CALIB Path/To/Calibration_matrix
+    python3 generate_DDF.py --NUM_SAMPLES 10 --SAMPLE_RANGE 10 --NUM_PRED 9 --PRED_TYPE parameter --LABEL_TYPE point --DATA_PATH Path/To/Dataset --FILENAME_CALIB Path/To/Calibration_matrix
     ``` 

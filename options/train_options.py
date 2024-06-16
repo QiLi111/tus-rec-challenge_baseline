@@ -6,9 +6,9 @@ class TrainOptions(BaseOptions):
 
         self.parser.add_argument('--PRED_TYPE', type=str,default='parameter',help='network output type: {"transform", "parameter", "point", "quaternion"}')
         self.parser.add_argument('--LABEL_TYPE', type=str,default='point',help='label type: {"point", "parameter", "transform"}')
-        self.parser.add_argument('--NUM_SAMPLES', type=int,default=10,help='number of input frames/imgs')
-        self.parser.add_argument('--SAMPLE_RANGE', type=int,default=10,help='from which the input frames/imgs are selected from')
-        self.parser.add_argument('--NUM_PRED', type=int,default=9,help='to those frames/imgs, transformation matrix are predicted ')
+        self.parser.add_argument('--NUM_SAMPLES', type=int,default=2,help='number of input frames/imgs')
+        self.parser.add_argument('--SAMPLE_RANGE', type=int,default=2,help='from which the input frames/imgs are selected from')
+        self.parser.add_argument('--NUM_PRED', type=int,default=1,help='to those frames/imgs, transformation matrix are predicted ')
         self.parser.add_argument('--model_name', type=str,default='efficientnet_b1',help='network name:{"efficientnet_b1", "resnet", "LSTM_0", "LSTM", "LSTM_GT","classicifation_b1"}')
 
         self.parser.add_argument('--retrain', type=bool,default=False,help='whether load a pretrained model')

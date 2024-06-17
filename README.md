@@ -77,7 +77,9 @@ mkdir landmarks
 #### 4. Download data from [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794) [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499).
    Put `train_part1.zip`, `train_part2.zip`, `landmark.zip`, and `calib_matrix.csv` into `./data` directory.
 
-#### 5. Unzip
+#### 5. Unzip.
+Unzip `train_part1.zip` and `train_part2.zip` into `./data/frames_transfs` directory, and unzip `landmark.zip` into `./data/landmarks` directory.
+
 ```
 unzip \train_part\*.zip -d frames_transfs
 unzip \landmark.zip -d landmarks

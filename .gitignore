@@ -7,7 +7,6 @@
 .vscode/
 __pycache__/
 .DS_Store
-seq*/
 log/
 *.sh
 sh/

@@ -43,25 +43,25 @@ def save_best_network(opt, model, epoch_label, running_loss_val, running_dist_va
 
     if running_loss_val < val_loss_min:
         val_loss_min = running_loss_val
-        file_name = os.path.join(opt.SAVE_PATH, 'config.txt')
+        file_name = os.path.join(os.getcwd(),opt.SAVE_PATH, 'config.txt')
         with open(file_name, 'a') as opt_file:
             opt_file.write('------------ best validation loss result - epoch %s: -------------\n' % (str(epoch_label)))
         if opt.multi_gpu:
-            torch.save(model.module.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
+            torch.save(model.module.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
         else:
-            torch.save(model.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
+            torch.save(model.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
         print('Best validation loss parameters saved.')
     
     if running_dist_val < val_dist_min:
         val_dist_min = running_dist_val
-        file_name = os.path.join(opt.SAVE_PATH, 'config.txt')
+        file_name = os.path.join(os.getcwd(),opt.SAVE_PATH, 'config.txt')
         with open(file_name, 'a') as opt_file:
             opt_file.write('------------ best validation dist result - epoch %s: -------------\n' % (str(epoch_label)))
         
         if opt.multi_gpu:
-            torch.save(model.module.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
+            torch.save(model.module.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
         else:
-            torch.save(model.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'best_validation_dist_model'))
+            torch.save(model.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_dist_model'))
         print('Best validation dist parameters saved.')
     
     return val_loss_min, val_dist_min
@@ -87,11 +87,11 @@ def write_to_txt(opt,epoch, loss_dists):
     epoch_loss_val = loss_dists['val_epoch_loss']
     epoch_dist_val = loss_dists['val_epoch_dist'].mean()
     
-    file_name_train = os.path.join(opt.SAVE_PATH, 'train_results', 'train_loss.txt')
+    file_name_train = os.path.join(os.getcwd(),opt.SAVE_PATH, 'train_results', 'train_loss.txt')
     with open(file_name_train, 'a') as opt_file_train:
         print('[Epoch %d], train-loss=%.3f, train-dist=%.3f' % (epoch, train_epoch_loss, train_epoch_dist),file=opt_file_train)
 
-    file_name_val = os.path.join(opt.SAVE_PATH, 'val_results', 'val_loss.txt')
+    file_name_val = os.path.join(os.getcwd(),opt.SAVE_PATH, 'val_results', 'val_loss.txt')
     with open(file_name_val, 'a') as opt_file_val:
         print('[Epoch %d], val-loss=%.3f, val-dist=%.3f' % (epoch, epoch_loss_val, epoch_dist_val), file=opt_file_val)
 
@@ -111,13 +111,13 @@ def save_model(model,epoch,opt):
     if epoch in range(int(opt.retrain_epoch), int(opt.retrain_epoch)+opt.NUM_EPOCHS, opt.FREQ_SAVE):
                
         if opt.multi_gpu:
-            torch.save(model.module.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'model_epoch%08d' % epoch))
+            torch.save(model.module.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'model_epoch%08d' % epoch))
         else:
-            torch.save(model.state_dict(), os.path.join(opt.SAVE_PATH, 'saved_model', 'model_epoch%08d' % epoch))
+            torch.save(model.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'model_epoch%08d' % epoch))
        
         print('Model parameters saved.')
-        list_dir = os.listdir(os.path.join(opt.SAVE_PATH, 'saved_model'))
+        list_dir = os.listdir(os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model'))
         saved_models = [i for i in list_dir if i.startswith('model_epoch')]
         if len(saved_models)>4:
-            os.remove(os.path.join(opt.SAVE_PATH,'saved_model',sorted(saved_models)[0]))
+            os.remove(os.path.join(os.getcwd(),opt.SAVE_PATH,'saved_model',sorted(saved_models)[0]))
 

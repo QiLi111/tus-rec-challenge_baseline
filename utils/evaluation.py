@@ -2,7 +2,7 @@ import os
 import torch,h5py
 import numpy as np
 from utils.network import build_model
-from utils.data_process_functions import *
+from utils.plot_functions import *
 from utils.transform import LabelTransform, PredictionTransform,Transform2Transform,TransformAccumulation
 from utils.funs import *
 
@@ -58,7 +58,7 @@ class Evaluation():
             pred_dim = self.pred_dim,
             ).to(device)
         ## load the model
-        self.model.load_state_dict(torch.load(os.path.join(self.opt.SAVE_PATH,'saved_model', self.model_name),map_location=torch.device(self.device)))
+        self.model.load_state_dict(torch.load(os.path.join(os.getcwd(),self.opt.SAVE_PATH,'saved_model', self.model_name),map_location=torch.device(self.device)))
         self.model.train(False)
 
     def calculate_GT_DDF(self, scan_index):
@@ -66,7 +66,7 @@ class Evaluation():
         frames, tforms, indices, scan_name = self.dset[scan_index]
         frames, tforms = (torch.tensor(t)[None,...].to(self.device) for t in [frames, tforms])
         tforms_inv = torch.linalg.inv(tforms)
-        landmark_file = h5py.File(os.path.join(self.opt.LANDMARK_PATH,"landmark_%03d.h5" %indices[0]), 'r')
+        landmark_file = h5py.File(os.path.join(os.getcwd(),self.opt.LANDMARK_PATH,"landmark_%03d.h5" %indices[0]), 'r')
         landmark = torch.from_numpy(landmark_file[scan_name][()])
 
         self.labels_global_allpts_DDF, self.labels_global_four = self.cal_label_globle_allpts(frames,tforms,tforms_inv)
@@ -183,7 +183,7 @@ class Evaluation():
         frames, tforms, indices, scan_name = self.dset[scan_index]
         frames, tforms = (torch.tensor(t)[None,...].to(self.device) for t in [frames, tforms])
         frames = frames/255
-        landmark_file = h5py.File(os.path.join(self.opt.LANDMARK_PATH,"landmark_%03d.h5" %indices[0]), 'r')
+        landmark_file = h5py.File(os.path.join(os.getcwd(),self.opt.LANDMARK_PATH,"landmark_%03d.h5" %indices[0]), 'r')
         landmark = torch.from_numpy(landmark_file[scan_name][()])
 
         transformation_local, transformation_global, self.predictions_global_allpts_DDF, self.predictions_global_four = self.cal_pred_globle_allpts(frames)

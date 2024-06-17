@@ -1,7 +1,5 @@
-
 import random
 import json,os
-
 import h5py
 import numpy as np
 
@@ -22,10 +20,10 @@ class Dataset():
         :param sample_range: type int, range of sampling frames, default is num_samples; should not larger than the number of frames in a scan
         """
         self.data_path=data_path
-        self.subs = [f for f in os.listdir(self.data_path) if os.path.isdir(os.path.join(self.data_path, f))]
+        self.subs = [f for f in os.listdir(os.path.join(os.getcwd(),self.data_path)) if os.path.isdir(os.path.join(self.data_path, f))]
         self.subs = sorted(self.subs)
         # scans in each folder have the same set of names
-        self.scans = [f for f in os.listdir(os.path.join(self.data_path, self.subs[0])) if f.endswith(".h5")]
+        self.scans = [f for f in os.listdir(os.path.join(os.getcwd(),self.data_path, self.subs[0])) if f.endswith(".h5")]
         
         if indices_in_use is None:
             # use all the scans
@@ -128,7 +126,7 @@ class Dataset():
             raise("Each subjects should have 24 scans")
         fn_mha=sorted(scans)
 
-        h5file = h5py.File(os.path.join(self.data_path,self.subs[indices[0]],fn_mha[indices[1]]), 'r')
+        h5file = h5py.File(os.path.join(os.getcwd(),self.data_path,self.subs[indices[0]],fn_mha[indices[1]]), 'r')
         frames = h5file['frames']
         tforms = h5file['tforms']
         scan_name = fn_mha[indices[1]][:-3]

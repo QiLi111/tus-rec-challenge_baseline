@@ -6,7 +6,7 @@ import os
 import h5py
 import torch
 from options.train_options import TrainOptions
-from utils.data_process_functions import *
+from utils.plot_functions import *
 
 
 opt = TrainOptions().parse()
@@ -14,7 +14,7 @@ DATA_DIR = opt.DATA_PATH
 FILENAME_CALIB = opt.FILENAME_CALIB
 
 # get object names in HDF5 file
-DataSet = h5py.File(os.path.join(DATA_DIR,"019","RH_Per_C_PtD.h5"),'r')    
+DataSet = h5py.File(os.path.join(os.getcwd(),DATA_DIR,"001","RH_Par_C_PtD.h5"),'r')    
 for key in DataSet.keys():
     print(key) 
     print(type(DataSet[key])) 

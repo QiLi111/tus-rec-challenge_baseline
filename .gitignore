@@ -5,7 +5,6 @@
 # .git/
 .idea/
 .vscode/
-results/
 __pycache__/
 .DS_Store
 seq*/
@@ -20,9 +19,11 @@ jobs/
 log/
 loader_merge.py
 data_merge.py
-results*/
+results2/
+results3/
 submission*.py
 submission_funs*.py
+*.h5
 
 
 

@@ -91,7 +91,7 @@ class LabelTransform():
         return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
  
     def to_transform_t2t(self, tforms, tforms_inv):
-        # the label includes the rigid part of calibration matrix, so the transformation is from image(mm) to tool, and the final transformed points in in mm, rather in pixel
+        # the label includes the rigid part of calibration matrix, so the transformation is from image(mm) to image(mm), and the final transformed points is in mm, rather in pixel
         # such that the label is Orthogonal Matrix, which is the requirment to use some functions in pytorch3d
         if tforms_inv is None:
             tforms_inv = torch.linalg.inv(tforms)

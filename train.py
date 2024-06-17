@@ -7,19 +7,19 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.loader import Dataset
 from utils.network import build_model
 from utils.loss import PointDistance
-from utils.data_process_functions import *
+from utils.plot_functions import *
 from utils.transform import LabelTransform, PredictionTransform, PointTransform
 from options.train_options import TrainOptions
 from utils.funs import *
 
 
 opt = TrainOptions().parse()
-writer = SummaryWriter(os.path.join(opt.SAVE_PATH))
+writer = SummaryWriter(os.path.join(os.getcwd(),opt.SAVE_PATH))
 os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_ids
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # get data pairs for prediction
 data_pairs = pair_samples(opt.NUM_SAMPLES, opt.NUM_PRED, 0).to(device)
-with open(opt.SAVE_PATH +'/'+ 'data_pairs.json', 'w', encoding='utf-8') as fp:
+with open(os.getcwd()+'/'+ opt.SAVE_PATH +'/'+ 'data_pairs.json', 'w', encoding='utf-8') as fp:
     json.dump(data_pairs.cpu().numpy().tolist(), fp, ensure_ascii=False, indent=4)
 
 # all avaliable data
@@ -36,7 +36,7 @@ dset_folds = dataset_all.partition_by_ratio(
     )
 # save the indices of the splited train,val and test dataset, for reproducibility
 for (idx, ds) in enumerate(dset_folds):
-    ds.write_json(os.path.join(opt.SAVE_PATH,"fold_{:02d}.json".format(idx))) 
+    ds.write_json(os.path.join(os.getcwd(),opt.SAVE_PATH,"fold_{:02d}.json".format(idx))) 
 
 # construct the train, val and test dataset
 dset_train = dset_folds[0]+dset_folds[1]+dset_folds[2]
@@ -62,7 +62,7 @@ val_loader = torch.utils.data.DataLoader(
 
 
 ## load calibration metric
-tform_calib_scale,tform_calib_R_T, tform_calib = read_calib_matrices(opt.FILENAME_CALIB)
+tform_calib_scale,tform_calib_R_T, tform_calib = read_calib_matrices(os.path.join(os.getcwd(),opt.FILENAME_CALIB))
 # image points coordinates on image coordinate system
 image_points = reference_image_points(dset_train[0][0].shape[1:],2).to(device)
 # hyper-parameter for prediction and label
@@ -104,7 +104,7 @@ model = build_model(
 
 # retrain the model from previous epoch
 if opt.retrain:
-    model.load_state_dict(torch.load(os.path.join(opt.SAVE_PATH,'saved_model', 'model_epoch'+str(opt.retrain_epoch)),map_location=torch.device(device)))
+    model.load_state_dict(torch.load(os.path.join(os.getcwd(),opt.SAVE_PATH,'saved_model', 'model_epoch'+str(opt.retrain_epoch)),map_location=torch.device(device)))
 
 
 if opt.multi_gpu:

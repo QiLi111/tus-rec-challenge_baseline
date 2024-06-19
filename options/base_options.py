@@ -1,3 +1,4 @@
+
 import argparse
 import os
 
@@ -12,7 +13,7 @@ class BaseOptions():
         self.parser.add_argument('--FILENAME_CALIB', type=str, default='data/calib_matrix.csv',help='dataroot of calibration matrix')
         self.parser.add_argument('--LANDMARK_PATH', type=str, default='data/landmarks', help='foldername of label path for landmark')
         self.parser.add_argument('--multi_gpu', type=bool, default=False, help='whether use multi gpus')
-        self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu id: e.g., 0,1,2...')
+        self.parser.add_argument('--gpu_ids', type=str, default='1', help='gpu id: e.g., 0,1,2...')
         self.initialized = True
 
     def parse(self):

@@ -17,7 +17,7 @@ class Evaluation():
         self.model_name = model_name
         self.data_pairs = data_pairs.to(self.device)
         self.saved_folder = saved_folder
-        self.tform_calib_scale,self.tform_calib_R_T, self.tform_calib = read_calib_matrices(opt.FILENAME_CALIB)
+        self.tform_calib_scale,self.tform_calib_R_T, self.tform_calib = read_calib_matrices(os.path.join(os.getcwd(),opt.FILENAME_CALIB))
         # image points coordinates in image coordinate system, all pixel points
         self.image_points = reference_image_points(self.dset[0][0].shape[1:],self.dset[0][0].shape[1:]).to(device)
 

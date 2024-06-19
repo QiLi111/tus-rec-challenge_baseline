@@ -17,7 +17,7 @@ NUM_SAMPLES,2
 PRED_TYPE,parameter
 SAMPLE_RANGE,2
 SAVE_PATH,results/seq_len2__efficientnet_b1__lr0.0001__pred_type_parameter__label_type_point
-gpu_ids,0
+gpu_ids,1
 isTrain,True
 model_name,efficientnet_b1
 multi_gpu,False
@@ -25,3 +25,274 @@ retrain,False
 retrain_epoch,00000000
 val_fre,1
 ------------ Options -------------
+------------ best validation loss result - epoch 0: -------------
+------------ best validation dist result - epoch 0: -------------
+------------ best validation loss result - epoch 1: -------------
+------------ best validation dist result - epoch 1: -------------
+------------ best validation dist result - epoch 6: -------------
+------------ best validation loss result - epoch 7: -------------
+------------ best validation dist result - epoch 7: -------------
+------------ best validation dist result - epoch 10: -------------
+------------ best validation loss result - epoch 11: -------------
+------------ best validation loss result - epoch 12: -------------
+------------ best validation dist result - epoch 12: -------------
+------------ best validation loss result - epoch 16: -------------
+------------ best validation dist result - epoch 16: -------------
+------------ best validation loss result - epoch 17: -------------
+------------ best validation dist result - epoch 17: -------------
+------------ best validation loss result - epoch 19: -------------
+------------ best validation dist result - epoch 19: -------------
+------------ best validation loss result - epoch 21: -------------
+------------ best validation dist result - epoch 21: -------------
+------------ best validation loss result - epoch 32: -------------
+------------ best validation dist result - epoch 32: -------------
+------------ best validation loss result - epoch 33: -------------
+------------ best validation dist result - epoch 33: -------------
+------------ best validation loss result - epoch 35: -------------
+------------ best validation dist result - epoch 35: -------------
+------------ best validation loss result - epoch 36: -------------
+------------ best validation dist result - epoch 36: -------------
+------------ best validation loss result - epoch 38: -------------
+------------ best validation dist result - epoch 38: -------------
+------------ best validation loss result - epoch 39: -------------
+------------ best validation dist result - epoch 39: -------------
+------------ best validation loss result - epoch 40: -------------
+------------ best validation dist result - epoch 40: -------------
+------------ best validation loss result - epoch 44: -------------
+------------ best validation dist result - epoch 44: -------------
+------------ best validation loss result - epoch 51: -------------
+------------ best validation dist result - epoch 51: -------------
+------------ best validation loss result - epoch 56: -------------
+------------ best validation loss result - epoch 58: -------------
+------------ best validation dist result - epoch 58: -------------
+------------ best validation loss result - epoch 59: -------------
+------------ best validation dist result - epoch 59: -------------
+------------ best validation dist result - epoch 61: -------------
+------------ Options -------------
+DATA_PATH,data/frames_transfs
+FILENAME_CALIB,data/calib_matrix.csv
+FILENAME_TEST,fold_04
+FILENAME_TRAIN,['fold_00', 'fold_01', 'fold_02']
+FILENAME_VAL,fold_03
+FREQ_INFO,10
+FREQ_SAVE,100
+LABEL_TYPE,point
+LANDMARK_PATH,data/landmarks
+LEARNING_RATE,0.0001
+MINIBATCH_SIZE,16
+MODEL_FN,saved_model/
+NUM_EPOCHS,1000000
+NUM_PRED,1
+NUM_SAMPLES,2
+PRED_TYPE,parameter
+SAMPLE_RANGE,2
+SAVE_PATH,results/seq_len2__efficientnet_b1__lr0.0001__pred_type_parameter__label_type_point
+gpu_ids,1
+isTrain,True
+model_name,efficientnet_b1
+multi_gpu,False
+retrain,False
+retrain_epoch,00000000
+val_fre,1
+------------ Options -------------
+------------ Options -------------
+DATA_PATH,data/frames_transfs
+FILENAME_CALIB,data/calib_matrix.csv
+FILENAME_TEST,fold_04
+FILENAME_TRAIN,['fold_00', 'fold_01', 'fold_02']
+FILENAME_VAL,fold_03
+FREQ_INFO,10
+FREQ_SAVE,100
+LABEL_TYPE,point
+LANDMARK_PATH,data/landmarks
+LEARNING_RATE,0.0001
+MINIBATCH_SIZE,16
+MODEL_FN,saved_model/
+NUM_EPOCHS,1000000
+NUM_PRED,1
+NUM_SAMPLES,2
+PRED_TYPE,parameter
+SAMPLE_RANGE,2
+SAVE_PATH,results/seq_len2__efficientnet_b1__lr0.0001__pred_type_parameter__label_type_point
+gpu_ids,1
+isTrain,True
+model_name,efficientnet_b1
+multi_gpu,False
+retrain,False
+retrain_epoch,00000000
+val_fre,1
+------------ Options -------------
+------------ best validation loss result - epoch 72: -------------
+------------ best validation dist result - epoch 72: -------------
+------------ best validation loss result - epoch 80: -------------
+------------ best validation dist result - epoch 80: -------------
+------------ best validation loss result - epoch 86: -------------
+------------ best validation dist result - epoch 86: -------------
+------------ best validation loss result - epoch 101: -------------
+------------ best validation loss result - epoch 105: -------------
+------------ best validation dist result - epoch 105: -------------
+------------ best validation loss result - epoch 106: -------------
+------------ best validation dist result - epoch 106: -------------
+------------ best validation loss result - epoch 112: -------------
+------------ best validation dist result - epoch 112: -------------
+------------ best validation loss result - epoch 118: -------------
+------------ best validation loss result - epoch 126: -------------
+------------ best validation dist result - epoch 126: -------------
+------------ best validation loss result - epoch 134: -------------
+------------ best validation dist result - epoch 134: -------------
+------------ best validation loss result - epoch 154: -------------
+------------ best validation dist result - epoch 154: -------------
+------------ best validation loss result - epoch 158: -------------
+------------ best validation loss result - epoch 159: -------------
+------------ best validation dist result - epoch 159: -------------
+------------ best validation loss result - epoch 212: -------------
+------------ best validation dist result - epoch 212: -------------
+------------ best validation loss result - epoch 247: -------------
+------------ best validation dist result - epoch 247: -------------
+------------ best validation loss result - epoch 257: -------------
+------------ best validation dist result - epoch 257: -------------
+------------ best validation dist result - epoch 285: -------------
+------------ best validation loss result - epoch 324: -------------
+------------ best validation dist result - epoch 352: -------------
+------------ best validation dist result - epoch 354: -------------
+------------ best validation loss result - epoch 355: -------------
+------------ best validation dist result - epoch 355: -------------
+------------ best validation loss result - epoch 356: -------------
+------------ best validation dist result - epoch 356: -------------
+------------ best validation loss result - epoch 357: -------------
+------------ best validation dist result - epoch 357: -------------
+------------ best validation loss result - epoch 358: -------------
+------------ best validation dist result - epoch 358: -------------
+------------ best validation loss result - epoch 363: -------------
+------------ best validation dist result - epoch 363: -------------
+------------ best validation loss result - epoch 369: -------------
+------------ best validation dist result - epoch 369: -------------
+------------ best validation loss result - epoch 378: -------------
+------------ best validation dist result - epoch 380: -------------
+------------ best validation loss result - epoch 382: -------------
+------------ best validation dist result - epoch 382: -------------
+------------ best validation loss result - epoch 392: -------------
+------------ best validation dist result - epoch 392: -------------
+------------ best validation loss result - epoch 396: -------------
+------------ best validation dist result - epoch 396: -------------
+------------ best validation loss result - epoch 400: -------------
+------------ best validation dist result - epoch 400: -------------
+------------ Options -------------
+DATA_PATH,data/frames_transfs
+FILENAME_CALIB,data/calib_matrix.csv
+FILENAME_TEST,fold_04
+FILENAME_TRAIN,['fold_00', 'fold_01', 'fold_02']
+FILENAME_VAL,fold_03
+FREQ_INFO,10
+FREQ_SAVE,100
+LABEL_TYPE,point
+LANDMARK_PATH,data/landmarks
+LEARNING_RATE,0.0001
+MINIBATCH_SIZE,16
+MODEL_FN,saved_model/
+NUM_EPOCHS,1000000
+NUM_PRED,1
+NUM_SAMPLES,2
+PRED_TYPE,parameter
+SAMPLE_RANGE,2
+SAVE_PATH,results/seq_len2__efficientnet_b1__lr0.0001__pred_type_parameter__label_type_point
+gpu_ids,1
+isTrain,True
+model_name,efficientnet_b1
+multi_gpu,False
+retrain,False
+retrain_epoch,00000000
+val_fre,1
+------------ Options -------------
+------------ best validation loss result - epoch 412: -------------
+------------ best validation dist result - epoch 415: -------------
+------------ best validation loss result - epoch 421: -------------
+------------ best validation dist result - epoch 421: -------------
+------------ best validation dist result - epoch 438: -------------
+------------ best validation dist result - epoch 446: -------------
+------------ best validation loss result - epoch 451: -------------
+------------ best validation dist result - epoch 451: -------------
+------------ best validation dist result - epoch 454: -------------
+------------ best validation loss result - epoch 468: -------------
+------------ best validation dist result - epoch 468: -------------
+------------ best validation dist result - epoch 487: -------------
+------------ best validation loss result - epoch 497: -------------
+------------ best validation dist result - epoch 497: -------------
+------------ best validation dist result - epoch 532: -------------
+------------ best validation dist result - epoch 536: -------------
+------------ best validation dist result - epoch 542: -------------
+------------ best validation loss result - epoch 547: -------------
+------------ best validation dist result - epoch 585: -------------
+------------ best validation loss result - epoch 595: -------------
+------------ best validation dist result - epoch 595: -------------
+------------ best validation loss result - epoch 600: -------------
+------------ best validation loss result - epoch 606: -------------
+------------ best validation dist result - epoch 606: -------------
+------------ best validation loss result - epoch 607: -------------
+------------ best validation dist result - epoch 607: -------------
+------------ best validation loss result - epoch 615: -------------
+------------ best validation dist result - epoch 615: -------------
+------------ best validation loss result - epoch 633: -------------
+------------ best validation dist result - epoch 633: -------------
+------------ best validation loss result - epoch 671: -------------
+------------ best validation dist result - epoch 671: -------------
+------------ best validation loss result - epoch 814: -------------
+------------ best validation dist result - epoch 814: -------------
+------------ best validation loss result - epoch 918: -------------
+------------ best validation dist result - epoch 918: -------------
+------------ best validation loss result - epoch 922: -------------
+------------ best validation dist result - epoch 922: -------------
+------------ best validation loss result - epoch 1034: -------------
+------------ best validation dist result - epoch 1034: -------------
+------------ best validation loss result - epoch 1070: -------------
+------------ best validation dist result - epoch 1070: -------------
+------------ best validation loss result - epoch 1152: -------------
+------------ best validation dist result - epoch 1204: -------------
+------------ best validation loss result - epoch 1225: -------------
+------------ best validation dist result - epoch 1225: -------------
+------------ best validation loss result - epoch 1333: -------------
+------------ best validation loss result - epoch 1407: -------------
+------------ best validation dist result - epoch 1407: -------------
+------------ best validation dist result - epoch 1417: -------------
+------------ best validation loss result - epoch 1444: -------------
+------------ best validation dist result - epoch 1444: -------------
+------------ best validation loss result - epoch 1455: -------------
+------------ best validation dist result - epoch 1455: -------------
+------------ best validation dist result - epoch 1500: -------------
+------------ best validation loss result - epoch 1511: -------------
+------------ best validation dist result - epoch 1511: -------------
+------------ best validation loss result - epoch 1512: -------------
+------------ best validation dist result - epoch 1512: -------------
+------------ best validation loss result - epoch 1554: -------------
+------------ best validation loss result - epoch 1569: -------------
+------------ best validation dist result - epoch 1569: -------------
+------------ best validation dist result - epoch 1697: -------------
+------------ best validation loss result - epoch 1714: -------------
+------------ best validation dist result - epoch 1714: -------------
+------------ best validation loss result - epoch 1962: -------------
+------------ best validation loss result - epoch 2054: -------------
+------------ best validation dist result - epoch 2054: -------------
+------------ best validation dist result - epoch 2064: -------------
+------------ best validation loss result - epoch 2080: -------------
+------------ best validation loss result - epoch 2142: -------------
+------------ best validation dist result - epoch 2142: -------------
+------------ best validation dist result - epoch 2291: -------------
+------------ best validation loss result - epoch 2644: -------------
+------------ best validation dist result - epoch 2649: -------------
+------------ best validation dist result - epoch 2757: -------------
+------------ best validation loss result - epoch 2780: -------------
+------------ best validation dist result - epoch 2780: -------------
+------------ best validation dist result - epoch 2948: -------------
+------------ best validation dist result - epoch 3261: -------------
+------------ best validation loss result - epoch 3360: -------------
+------------ best validation loss result - epoch 3361: -------------
+------------ best validation dist result - epoch 3361: -------------
+------------ best validation loss result - epoch 3996: -------------
+------------ best validation dist result - epoch 3996: -------------
+------------ best validation dist result - epoch 4399: -------------
+------------ best validation loss result - epoch 5185: -------------
+------------ best validation dist result - epoch 5869: -------------
+------------ best validation loss result - epoch 6037: -------------
+------------ best validation dist result - epoch 6037: -------------
+------------ best validation loss result - epoch 6108: -------------
+------------ best validation dist result - epoch 6108: -------------

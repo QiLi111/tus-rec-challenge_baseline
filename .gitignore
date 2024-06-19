@@ -19,6 +19,7 @@ loader_merge.py
 data_merge.py
 results2/
 results3/
+results(copy)/
 results-upload/
 submission*.py
 submission_funs*.py

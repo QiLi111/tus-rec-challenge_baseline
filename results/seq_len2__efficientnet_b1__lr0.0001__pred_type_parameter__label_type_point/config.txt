@@ -296,3 +296,30 @@ val_fre,1
 ------------ best validation dist result - epoch 6037: -------------
 ------------ best validation loss result - epoch 6108: -------------
 ------------ best validation dist result - epoch 6108: -------------
+------------ Options -------------
+DATA_PATH,data/frames_transfs
+FILENAME_CALIB,data/calib_matrix.csv
+FILENAME_TEST,fold_04
+FILENAME_TRAIN,['fold_00', 'fold_01', 'fold_02']
+FILENAME_VAL,fold_03
+FREQ_INFO,10
+FREQ_SAVE,100
+LABEL_TYPE,point
+LANDMARK_PATH,data/landmarks
+LEARNING_RATE,0.0001
+MINIBATCH_SIZE,16
+MODEL_FN,saved_model/
+NUM_EPOCHS,1000000
+NUM_PRED,1
+NUM_SAMPLES,2
+PRED_TYPE,parameter
+SAMPLE_RANGE,2
+SAVE_PATH,results/seq_len2__efficientnet_b1__lr0.0001__pred_type_parameter__label_type_point
+gpu_ids,1
+isTrain,True
+model_name,efficientnet_b1
+multi_gpu,False
+retrain,False
+retrain_epoch,00000000
+val_fre,1
+------------ Options -------------

@@ -54,15 +54,6 @@ For instance, the network can predict the transformation between two US frames a
 
 For more information about the algorithm, refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551).
 
-
-### Install conda environment
-``` bash
-conda create -n freehand-US python=3.9.13
-conda activate freehand-US
-pip install -r requirements.txt
-conda install pytorch3d --no-deps -c pytorch3d
-```
-
 ### Steps to run the code
 #### 1. Clone the repository.
 ```
@@ -74,7 +65,16 @@ git clone https://github.com/QiLi111/tus-rec-challenge_baseline.git
 cd tus-rec-challenge_baseline
 ```
 
-#### 3. Create directories.
+#### 3. Install conda environment
+
+``` bash
+conda create -n freehand-US python=3.9.13
+conda activate freehand-US
+pip install -r requirements.txt
+conda install pytorch3d --no-deps -c pytorch3d
+```
+
+#### 4. Create directories.
 ```
 mkdir data
 cd data
@@ -82,10 +82,10 @@ mkdir frames_transfs
 mkdir landmarks
 ```
 
-#### 4. Download data from [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794) [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499).
+#### 5. Download data from [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794) [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499).
    Put `train_part1.zip`, `train_part2.zip`, `landmark.zip`, and `calib_matrix.csv` into `./data` directory.
 
-#### 5. Unzip.
+#### 6. Unzip.
 Unzip `train_part1.zip` and `train_part2.zip` into `./data/frames_transfs` directory, and unzip `landmark.zip` into `./data/landmarks` directory.
 
 ```
@@ -93,7 +93,7 @@ unzip \train_part\*.zip -d frames_transfs
 unzip \landmark.zip -d landmarks
 ```
 
-#### 6. Make sure the folder structure is the same as follows.
+#### 7. Make sure the folder structure is the same as follows.
 ```bash
 ├── data/ # Contains data set 
 │ ├── frames_transfs/ # Unzipped from `train_part1.zip` and `train_part2.zip`, including 50 folders
@@ -124,11 +124,11 @@ unzip \landmark.zip -d landmarks
 ├── requirements.txt # packages for environment installation
 ```
 
-#### 7. Train model.
+#### 8. Train model.
 ``` bash
 python3 train.py
 ```
-#### 8. Generate DDF.
+#### 9. Generate DDF.
 ``` bash
 python3 generate_DDF.py
 ```

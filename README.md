@@ -76,7 +76,6 @@ conda install pytorch3d --no-deps -c pytorch3d
 
 #### 4. Create directories.
 ```
-mkdir data
 mkdir -p data/frames_transfs
 mkdir -p data/landmarks
 ```

@@ -122,7 +122,7 @@ unzip data/landmark.zip -d data/landmarks
 ├── requirements.txt # packages for environment installation
 ```
 
-#### 8. Change back to the root directory and train model. 
+#### 8. Train model. 
 ``` bash
 python3 train.py
 ```

@@ -77,9 +77,8 @@ conda install pytorch3d --no-deps -c pytorch3d
 #### 4. Create directories.
 ```
 mkdir data
-cd data
-mkdir frames_transfs
-mkdir landmarks
+mkdir -p data/frames_transfs
+mkdir -p data/landmarks
 ```
 
 #### 5. Download data from [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794) [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499).
@@ -89,8 +88,8 @@ mkdir landmarks
 Unzip `train_part1.zip` and `train_part2.zip` into `./data/frames_transfs` directory, and unzip `landmark.zip` into `./data/landmarks` directory.
 
 ```
-unzip \train_part\*.zip -d frames_transfs
-unzip \landmark.zip -d landmarks
+unzip data/train_part\*.zip -d data/frames_transfs
+unzip data/landmark.zip -d data/landmarks
 ```
 
 #### 7. Make sure the folder structure is the same as follows.

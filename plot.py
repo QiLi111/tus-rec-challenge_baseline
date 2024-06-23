@@ -1,4 +1,4 @@
-# data process for MICCAI Chalenge 2024
+# An example of load data and plot scan
 # TUS-REC Challenge
 # Trackerless 3D Freehand Ultrasound Reconstruction (TUS-REC) Challenge
 

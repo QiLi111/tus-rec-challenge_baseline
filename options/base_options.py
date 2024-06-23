@@ -1,3 +1,4 @@
+# Hyperparameters for dataroot and GPU
 
 import argparse
 import os

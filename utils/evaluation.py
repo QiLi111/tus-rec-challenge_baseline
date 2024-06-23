@@ -1,3 +1,5 @@
+# Functions used during DDF generation
+
 import os
 import torch,h5py
 import numpy as np

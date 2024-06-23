@@ -1,3 +1,5 @@
+# Hyperparameters for training and generating DDF
+
 from .base_options import BaseOptions
 
 class TrainOptions(BaseOptions):

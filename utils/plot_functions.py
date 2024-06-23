@@ -1,3 +1,4 @@
+# Functions used during plotting
 
 import numpy as np
 import torch

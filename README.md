@@ -91,7 +91,7 @@ unzip data/train_part\*.zip -d data/frames_transfs
 unzip data/landmark.zip -d data/landmarks
 ```
 
-#### 7. Make sure the folder structure is the same as follows.
+#### 7. Make sure the data folder structure is the same as follows.
 ```bash
 ├── data/ # Contains data set 
 │ ├── frames_transfs/ # Unzipped from `train_part1.zip` and `train_part2.zip`, including 50 folders
@@ -104,22 +104,6 @@ unzip data/landmark.zip -d data/landmarks
 │  ├── landmark_000.h5 # Landmark coordinates in subject 000
 │  ├── ...
 │  ├── landmark_049.h5 # Landmark coordinates in subject 049
-├── train.py # Training script 
-├── generate_DDF.py # Generate 4 kinds of DDF 
-├── plot.py # An example of load data and plot scan
-├── utils/ # Utility functions 
-│ ├── transform.py # Transformation functions
-│ ├── loader.py # Data loader
-│ ├── loss.py # Loss function and metrics
-│ ├── network.py # Networks
-│ ├── funs.py # Functions used during training
-│ ├── plot_functions.py # Functions used during plotting
-│ ├── rigid_transform_3D.py # Adapted transformation function
-│ ├── evaluation.py # Functions used during DDF generation
-├── options/ # Model hyperparameter 
-│ ├── base_options.py # Hyperparameters for dataroot and GPU
-│ └── train_options.py # Hyperparameters for training and generating DDF
-├── requirements.txt # packages for environment installation
 ```
 
 #### 8. Train model. 

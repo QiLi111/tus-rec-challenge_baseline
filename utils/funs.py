@@ -60,7 +60,7 @@ def save_best_network(opt, model, epoch_label, running_loss_val, running_dist_va
             opt_file.write('------------ best validation dist result - epoch %s: -------------\n' % (str(epoch_label)))
         
         if opt.multi_gpu:
-            torch.save(model.module.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_loss_model' ))
+            torch.save(model.module.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_dist_model' ))
         else:
             torch.save(model.state_dict(), os.path.join(os.getcwd(),opt.SAVE_PATH, 'saved_model', 'best_validation_dist_model'))
         print('Best validation dist parameters saved.')

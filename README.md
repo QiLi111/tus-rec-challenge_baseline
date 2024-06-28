@@ -1,8 +1,5 @@
 # Trackerless 3D Freehand Ultrasound Reconstruction Challenge
 <!-- ## About -->
-**Welcome to the Trackerless 3D Freehand Ultrasound Reconstruction Challenge 2024 (TUS-REC2024)！**   
-
-The TUS-REC2024 Challenge is a part of the [27th International Conference on Medical Image Computing and Computer Assisted Intervention (MICCAI 2024)](https://conferences.miccai.org/2024/en/default.asp), held in conjunction with the [5th ASMUS workshop](https://miccai-ultrasound.github.io/#/asmus24), from October 6th to 10th 2024 in Marrakesh, Morocco.
 
 [Website](https://github-pages.ucl.ac.uk/tus-rec-challenge/) |
 [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) 
@@ -10,6 +7,10 @@ The TUS-REC2024 Challenge is a part of the [27th International Conference on Med
 [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499) |
 [Code Usage Instruction](#code) |
 [Data Usage Policy](#data-usage-policy)
+
+**Welcome to the Trackerless 3D Freehand Ultrasound Reconstruction Challenge 2024 (TUS-REC2024)！**   
+
+The TUS-REC2024 Challenge is a part of the 27th International Conference on Medical Image Computing and Computer Assisted Intervention ([MICCAI 2024](https://conferences.miccai.org/2024/en/default.asp)), held in conjunction with the [5th ASMUS workshop](https://miccai-ultrasound.github.io/#/asmus24), from October 6th to 10th 2024 in Marrakesh, Morocco.
 
 ## Background
 Reconstructing 2D Ultrasound (US) images into a 3D volume enables 3D representations of anatomy to be generated which are beneficial to a wide range of downstream tasks such as quantitative biometric measurement, multimodal registration, 3D visualisation and interventional guidance. Although substantive progress has been made recently through non-deep-learning- and deep-learning-based approaches, this application is still challenging due to 1) inherent accumulated error - frame-to-frame transformation error will be accumulated through time when reconstructing long sequence of US frames, and 2) a lack of publicly-accessible data with synchronised spatial location, often obtained from tracking devices, for benchmarking the performance and for training learning-based methods. The TUS-REC challenge aims to provide a benchmark for freehand US reconstruction with publicly available in vivo US data from forearms of one hundred volunteers, using multiple predefined scanning protocols, targeted at improving the reconstruction performance in this challenging task. The outcome of the challenge includes 1) open-sourcing the first largest tracked US datasets with accurate positional information; 2) establishing one of the first benchmarks for 3D US reconstruction, suitable for modern learning-based data-driven approaches.

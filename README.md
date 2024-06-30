@@ -8,6 +8,10 @@
 [Code Usage Instruction](#code) |
 [Data Usage Policy](#data-usage-policy)
 
+<div align=center>
+  <a target="_blank"><img style="padding: 10px;" src="img/logo.png" width=200px></a>
+</div >
+
 **Welcome to the Trackerless 3D Freehand Ultrasound Reconstruction Challenge 2024 (TUS-REC2024)！**   
 
 The TUS-REC2024 Challenge is a part of the 27th International Conference on Medical Image Computing and Computer Assisted Intervention ([MICCAI 2024](https://conferences.miccai.org/2024)), held in conjunction with the 5th ASMUS workshop, from October 6th to 10th 2024 in Marrakesh, Morocco. The challenge is supported by the MICCAI Special Interest Group in Medical Ultrasound ([SIGMUS](https://miccai.org/index.php/special-interest-groups/sig/)) and will be presented at its international workshop [ASMUS 2024](https://miccai-ultrasound.github.io/#/asmus24). 
@@ -28,7 +32,7 @@ Acquisition devices and config: The 2D US images were acquired using an Ultrason
 
 Scanning protocol: Both left and right forearms of volunteers were scanned. For each forearm, the US probe moves in three different trajectories (straight line shape, "C" shape, and "S" shape), in a distal-to-proximal direction followed by a proximal-to-distal direction, with the US plane perpendicular of and parallel to the scanning direction. The train dataset contains 1200 scans in total, 24 scans associated with each subject.
 
-![image info](./scan_traj.png)
+![image info](img/scan_traj.png)
 
 ### Dataset structure: 
 

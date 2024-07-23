@@ -164,6 +164,8 @@ unzip Freehand_US_data_val.zip -d ./data
   docker container run --gpus all -it -v /path/to/your/data/directory/on/the/host/machine:/home/tus-rec_challenge/data -v /path/to/your/results/directory/on/the/host/machine:/home/tus-rec_challenge/results --rm qqili/tus-rec:v1
   ```
 <!-- You can check the status of all the running containers using command `docker ps`. -->
+  
+  After successfully running the docker, you will see the `results` folder. You can also compare your own results with baseline results [here](https://liveuclac-my.sharepoint.com/:f:/g/personal/rmapqli_ucl_ac_uk/Emi-85IkzN1Iscn540Was3MB2n-IFHhP6g_vZHrIuu0YjQ?e=A8Uqwy).
 
 #### 8. Export docker image.
 ```

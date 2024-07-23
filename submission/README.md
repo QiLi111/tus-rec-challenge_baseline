@@ -127,7 +127,7 @@ Alternatively, the docker image is also available online. You can download it wi
   ```
   docker pull qqili/tus-rec
   ```
-* ##### Option 2: Download from [OneDrive](https://liveuclac-my.sharepoint.com/:f:/g/personal/rmapqli_ucl_ac_uk/Eqsat624BfxLt3BGFGuSkzkB5Xypj1ujLQSEmRR7PIQBWA?e=njqB2w). 
+* ##### Option 2: Download from [OneDrive](https://liveuclac-my.sharepoint.com/:f:/g/personal/rmapqli_ucl_ac_uk/EtEuWaTnTitKrrySZAGpCBgB0a0H_H2VyedexxEkJTUZLw?e=gdZFOu). 
   After downloading the docker image into your local machine, run the following command to load the docker image (more instruction [here](https://docs.docker.com/reference/cli/docker/image/load/)).
   ```
   docker load --input tus-rec.tar

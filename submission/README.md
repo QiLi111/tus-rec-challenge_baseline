@@ -162,7 +162,6 @@ unzip Freehand_US_data_val.zip -d ./data
   Note: If you use docker image from Docker Hub, the namespace `qqili` should be added before name of the docker image, for example:
   ```
   docker container run --gpus all -it -v /path/to/your/data/directory/on/the/host/machine:/home/tus-rec_challenge/data -v /path/to/your/results/directory/on/the/host/machine:/home/tus-rec_challenge/results --rm qqili/tus-rec:v1
-
   ```
 <!-- You can check the status of all the running containers using command `docker ps`. -->
 

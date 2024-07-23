@@ -26,7 +26,7 @@ The aim of this task is to reconstruct 2D US images into a 3D volume. The algori
 
 Participant teams are expected to make use of the sequential data and potentially make knowledge transfer from other domains such as computer vision and computer-assisted intervention. The participant teams are expected to take US scan as input and output two sets of pixel displacement vectors, indicating the transformation to reference frame, i.e., first frame in this task. The evaluation process will take the generated displacement vectors from their dockerized models, and produce the final accuracy score to represent the reconstruction performance, at local and global levels, representing different clinical application of the reconstruction methods.
 
-For details information, please see [Assessment Criteria](https://github-pages.ucl.ac.uk/tus-rec-challenge/assessment.html), and also [generate_DDF.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/96e62989b5b5b04296294cb8d5dff1ca6878266c/generate_DDF.py) for an example of generating required 4 kinds of displacement vectors.
+For details information, please see [Assessment Criteria](https://github-pages.ucl.ac.uk/tus-rec-challenge/assessment.html), and also [generate_DDF.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/generate_DDF.py) for an example of generating required 4 kinds of displacement vectors.
 
 ## Dataset
 

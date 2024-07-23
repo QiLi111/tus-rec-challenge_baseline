@@ -9,7 +9,7 @@
 
 ## Submission requirement
 * We have provided an example docker image [here](#instructions-for-docker), which can predict DDFs on the validation/test dataset. The source code is also available in [`submission`](https://github.com/QiLi111/tus-rec-challenge_baseline/tree/main/submission/) folder.
-* The participants are expected to replace the contents of [`predict_ddfs`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/predict_ddfs.py) function in [test.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/e8d2326e8186759a12c838d65f9fbda4b373ff36/submission/test.py#L36) with their own algorithm. The function is expected to take one entire scan as input, and output four kinds of DDFs. 
+* The participants are expected to replace the contents of [`predict_ddfs`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/predict_ddfs.py) function in [test.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/f4f28055d099822e4b577e8cabc3df6f3aa4e896/submission/test.py#L36) with their own algorithm. The function is expected to take one entire scan as input, and output four kinds of DDFs. 
 The requirement of the `predict_ddfs` function is described below:
   * Input: 
     * `frames`: All frames in the scan; numpy array with a shape of [N,480,640], where N is the number of frames in this scan.
@@ -23,7 +23,7 @@ The requirement of the `predict_ddfs` function is described below:
      
         
 > [!NOTE]  
-> * If you are not sure about data dimensions, coordinate system or transformation direction, etc., please refer to the example code in [`baseline_model`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/baseline_model/Prediction.py) folder.
+> * If you are not sure about data dimensions, coordinate system or transformation direction, etc., please refer to the [example code](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/baseline_model/Prediction.py) in `baseline_model` folder.
 > * Only modify the implementation of the `predict_ddfs` function. It’s okay to add files but please do not change existing files other than `baseline_model` folder.
 > *  The order of the four kinds of DDFs cannot be changed and they must all be numpy arrays. Please ensure your prediction does not have null values. Otherwise, the final score could not be generated.  
 > * Make sure the GPU memory is below 32G when running docker.

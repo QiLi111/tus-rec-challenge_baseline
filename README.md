@@ -53,7 +53,7 @@ Scanning protocol: Both left and right forearms of volunteers were scanned. For 
 ### Instruction
 This repository provides a framework for freehand US pose regression, including usage of various types of predictions and labels (see [transformation.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/utils/transform.py)). Please note that the networks used here are small and simplified for demonstration purposes.
 
-For instance, the network can predict the transformation between two US frames as 6 DOF "parameter", and if the label type is "point", the loss is calculated as the point distance (by transforming "parameter" to "point" using function [parameter_to_point](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/96e62989b5b5b04296294cb8d5dff1ca6878266c/utils/transform.py#L267)). The steps below illustrate an example of training a pose regression model and generate 4 kinds of displacements. 
+For instance, the network can predict the transformation between two US frames as 6 DOF "parameter", and if the label type is "point", the loss is calculated as the point distance (by transforming "parameter" to "point" using function [parameter_to_point](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/a7a235044d9fa0275470024df25db099c7e65522/utils/transform.py#L267)). The steps below illustrate an example of training a pose regression model and generate 4 kinds of displacements. 
 
 <!-- We use the transformation from image coordinate system (in mm) to image coordinate system (in mm), for example described in function [to_transform_t2t](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/2cdc92c003af8d985a50f27ea97900ba35da5c98/utils/transform.py#L93).  -->
 

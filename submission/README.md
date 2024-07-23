@@ -109,7 +109,7 @@ git clone https://github.com/QiLi111/tus-rec-challenge_baseline.git
 ```
 cd tus-rec-challenge_baseline/submission
 ```
-Note: If you want to see the plotted trajectories, please uncomments [this](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/e8d2326e8186759a12c838d65f9fbda4b373ff36/submission/test.py#L44) line.
+Note: If you want to see the plotted trajectories, please uncomments [this](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/a7a235044d9fa0275470024df25db099c7e65522/submission/test.py#L44) line.
 
 #### 3. Prepare Dockerfile.
 You can start from our example [Dockerfile](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/Dockerfile). To use your own environment, you just need to modify the [`requirements.txt`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/requirements.txt) to specify the dependencies.

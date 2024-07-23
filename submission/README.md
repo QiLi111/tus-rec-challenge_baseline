@@ -9,7 +9,7 @@
 
 ## Submission requirement
 * We have provided an example docker image [here](#instructions-for-docker), which can predict DDFs on the validation/test dataset. The source code is also available in [`submission`](https://github.com/QiLi111/tus-rec-challenge_baseline/tree/main/submission/) folder.
-* The participants are expected to replace the contents of [`predict_ddfs`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/predict_ddfs.py) function in [test.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/f4f28055d099822e4b577e8cabc3df6f3aa4e896/submission/test.py#L36) with their own algorithm. The function is expected to take one entire scan as input, and output four kinds of DDFs. 
+* The participants are expected to replace the contents of [`predict_ddfs`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/predict_ddfs.py) function in [test.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/5eec6014a7de2b652cdcf7333c58e00f01348560/submission/test.py#L36) with their own algorithm. The function is expected to take one entire scan as input, and output four kinds of DDFs. 
 The requirement of the `predict_ddfs` function is described below:
   * Input: 
     * `frames`: All frames in the scan; numpy array with a shape of [N,480,640], where N is the number of frames in this scan.
@@ -109,7 +109,7 @@ git clone https://github.com/QiLi111/tus-rec-challenge_baseline.git
 ```
 cd tus-rec-challenge_baseline/submission
 ```
-Note: If you want to see the plotted trajectories, please uncomments [this](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/a7a235044d9fa0275470024df25db099c7e65522/submission/test.py#L44) line.
+Note: If you want to see the plotted trajectories, please uncomments [this](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/5eec6014a7de2b652cdcf7333c58e00f01348560/submission/test.py#L44) line.
 
 #### 3. Prepare Dockerfile.
 You can start from our example [Dockerfile](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/Dockerfile). To use your own environment, you just need to modify the [`requirements.txt`](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/submission/requirements.txt) to specify the dependencies.

@@ -5,7 +5,9 @@
 [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) 
 [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794)
 [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499) |
-[Code Usage Instruction](#code) |
+[Training Code Usage Instruction](#training-code) |
+[Validation Dataset](https://zenodo.org/doi/10.5281/zenodo.12752246) |
+[Submission Requirement and Example Docker](/submission/README.md) |
 [Data Usage Policy](#data-usage-policy)
 
 <div align=center>
@@ -42,11 +44,11 @@ Scanning protocol: Both left and right forearms of volunteers were scanned. For 
 
     * `tforms` - All transformations in the scan; with a shape of [N,4,4], where N is the number of frames in the scan, and the transformation matrix denotes the transformation from tracker tool space to camera space. 
 
-    * Notations in the name of each .h5 file: “RH”: right arm; “LH”: “left arm”; “Per”: perpendicular; “Par”: parallel; “L”: straight line shape; “C”: C shape; “S”: S shape; “DtP”: distal-to-proximal direction; “PtD”: proximal-to-distal direction; For example, “RH_Ver_L_DtP.h5” denotes a scan on the right forearm, with ultrasound probe perpendicular of the forearm sweeping along straight line, in distal-to-proximal direction.
+    * Notations in the name of each .h5 file: “RH”: right arm; “LH”: “left arm”; “Per”: perpendicular; “Par”: parallel; “L”: straight line shape; “C”: C shape; “S”: S shape; “DtP”: distal-to-proximal direction; “PtD”: proximal-to-distal direction; For example, “RH_Per_L_DtP.h5” denotes a scan on the right forearm, with ultrasound probe perpendicular of the forearm sweeping along straight line, in distal-to-proximal direction.
 
 * Calibration matrix: The calibration matrix was obtained using a pinhead-based method. The `scaling_from_pixel_to_mm` and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` are provided in the “calib_matrix.csv”, where `scaling_from_pixel_to_mm` is the scale between image coordinate system (in pixel) and image coordinate system (in mm), and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` is the rigid transformation between image coordinate system (in mm) to tracking tool coordinate system.
 
-## Code
+## Training Code
 
 ### Instruction
 This repository provides a framework for freehand US pose regression, including usage of various types of predictions and labels (see [transformation.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/utils/transform.py)). Please note that the networks used here are small and simplified for demonstration purposes.

@@ -1,0 +1,7 @@
+h5py==3.8.0
+matplotlib==3.8.2
+numpy==1.26.2
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.12.1+cu113
+torchvision==0.13.1+cu113
+tensorboard==2.15.1

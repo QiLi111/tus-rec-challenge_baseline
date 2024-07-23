@@ -26,6 +26,10 @@ submission_funs*.py
 *.h5
 README-1.md
 README-2.md
+data/
+submission/results*
+submission/data
+
 
 
 

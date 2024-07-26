@@ -43,7 +43,7 @@ def main():
         labels_GP,labels_GL,labels_LP,labels_LL = generate_GT_ddf.calculate_GT_DDF(frames,tforms,landmark) 
 
         # plot scan     
-        plot_scans(frames,tforms,scan_name,labels_GP,pred_GP,data_path_plot,generate_GT_ddf.tform_calib_scale.cpu(),generate_GT_ddf.image_points.cpu())
+        # plot_scans(frames,tforms,scan_name,labels_GP,pred_GP,data_path_plot,generate_GT_ddf.tform_calib_scale.cpu(),generate_GT_ddf.image_points.cpu())
         
         # calculate metric
         GPE.append(cal_dist(labels_GP,pred_GP,'all'))

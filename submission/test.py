@@ -5,7 +5,7 @@ import numpy as np
 import time
 from utils.metrics import cal_dist
 from predict_ddfs import predict_ddfs
-from utils.Transf2DDFs import Transf2DDFs
+from utils.generate_ddf_from_label import generate_ddf_from_label
 from utils.plot_scans import plot_scans
 
 def main():
@@ -24,24 +24,26 @@ def main():
     dataset_keys = h5py.File(os.path.join(DATA_FOLDER,"dataset_keys.h5"),'r')
 
     # for ground truth use
-    transf2ddfs = Transf2DDFs(data_path_calib)
+    generate_GT_ddf = generate_ddf_from_label(data_path_calib)
     
     # for loop all the scans
     GPE,GLE,LPE,LLE,time_elapsed,i_scan=[],[],[],[],[],1
     for scan_name in list(dataset_keys.keys()):
         frames = h5py.File(os.path.join(data_path_frame,scan_name.split('__')[0][3:],scan_name.split('__')[1]+'.h5'), 'r')['frames'][()]
         landmark = h5py.File(os.path.join(data_path_landmark,"landmark_%03d.h5" %int(scan_name.split('__')[0][3:])), 'r')[scan_name.split('__')[1]][()]
+        
         # generate predicted DDF 
         start = time.time()
         pred_GP,pred_GL,pred_LP,pred_LL = predict_ddfs(frames,landmark,data_path_calib)
         end = time.time()
         time_elapsed.append((end - start)/60)
+        
         # ground truth DDF
         tforms = h5py.File(os.path.join(data_path_transf,scan_name.split('__')[0][3:],scan_name.split('__')[1]+'.h5'), 'r')['tforms'][()]
-        labels_GP,labels_GL,labels_LP,labels_LL = transf2ddfs.calculate_GT_DDF(frames,tforms,landmark) 
+        labels_GP,labels_GL,labels_LP,labels_LL = generate_GT_ddf.calculate_GT_DDF(frames,tforms,landmark) 
 
         # plot scan     
-        # plot_scans(frames,tforms,scan_name,transf2ddfs.labels_global_four,data_path_plot,pred_GP,transf2ddfs.tform_calib_scale,transf2ddfs.image_points.cpu())
+        plot_scans(frames,tforms,scan_name,labels_GP,pred_GP,data_path_plot,generate_GT_ddf.tform_calib_scale.cpu(),generate_GT_ddf.image_points.cpu())
         
         # calculate metric
         GPE.append(cal_dist(labels_GP,pred_GP,'all'))

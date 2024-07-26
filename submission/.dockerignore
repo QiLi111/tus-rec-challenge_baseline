@@ -1,3 +1,6 @@
+__pycache__/
+./baseline_model/__pycache__/
+./utils/__pycache__/
 ./data/
 ./results/
 ./results*/

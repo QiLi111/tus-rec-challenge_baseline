@@ -306,7 +306,6 @@ class PredictionTransform():
         return _tforms
 
 
-
 class TransformAccumulation:
 
     def __init__(
@@ -335,71 +334,10 @@ class TransformAccumulation:
         tform_img2_mm_to_img1_mm = tform_2_to_1
         # transformation from image2 to image0 in mm
         tform_img2_mm_to_img0_mm = torch.matmul(tform_img1_mm_to_img0_mm,tform_img2_mm_to_img1_mm)
-        # return point coordinates in image0 in mm, and the transformation from image2 to image0 in mm
-        return torch.matmul(tform_img2_mm_to_img0_mm,torch.matmul(self.tform_image_pixel_to_image_mm,self.image_points)),tform_img2_mm_to_img0_mm
+        # transformation from image2 to image0 in mm
+        return tform_img2_mm_to_img0_mm
 
-
-class PointTransform:
-    def __init__(self,
-                label_type=None,
-                image_points=None,
-                tform_image_to_tool=None,
-                tform_image_mm_to_tool = None,
-                tform_image_pixel_to_mm = None):
-        self.label_type = label_type
-        self.tform_image_to_tool = tform_image_to_tool
-        self.tform_image_mm_to_tool = tform_image_mm_to_tool
-        self.tform_image_pixel_to_mm = tform_image_pixel_to_mm
-        self.image_points = image_points
-        # pre-compute reference points in tool coordinates
-        self.image_points_in_tool = torch.matmul(self.tform_image_to_tool,self.image_points)
-        self.tform_tool_to_image = torch.linalg.inv(self.tform_image_to_tool)
-        self.tform_tool_to_image_mm = torch.linalg.inv(self.tform_image_mm_to_tool)
-        self.tform_image_mm_to_pixel = torch.linalg.inv(self.tform_image_pixel_to_mm)
-
-        if self.label_type=="point":        
-            self.call_function = self.point_to_point
-        
-        elif self.label_type=="transform":  
-            self.call_function = self.transform_to_point   
-
-        elif self.label_type=="parameter":
-            self.call_function = self.parameter_to_point  
-
-        else:
-            raise('Unknown label_type!')
-    
-    def __call__(self,preds):
-        return self.call_function(preds)
-        
-    def point_to_point(self,pts):
-        return pts
-    
-    def transform_to_point(self,_tforms):
-        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]
-    
-    def parameter_to_point(self,params):
-        # 'ZYX'
-        _tforms = self.param_to_transform(params)
-        # the same as the following function
-        # _tforms = pytorch3d.transforms.euler_angles_to_matrix(params, 'ZYX')
-
-        return torch.matmul(_tforms, torch.matmul(self.tform_image_pixel_to_mm,self.image_points))[:,:,0:3,:]  # [batch,num_pairs,(x,y,z,1),num_image_points]
-    
-    def param_to_transform(self,params):
-        # params: (batch,ch,6), "ch": num_pairs, "6":rx,ry,rz,tx,ty,tz
-        matrix = pytorch3d.transforms.euler_angles_to_matrix(params[...,0:3], 'ZYX')
-        transform = torch.cat((matrix,params[...,3:][...,None]),axis=3)
-        last_rows = torch.cat((torch.zeros_like(matrix[0,0,:,0]),torch.ones_like(params[0,0,0:1])),axis=0).expand(list(matrix.shape[0:2])[0],list(matrix.shape[0:2])[1],1,4)
-        _tforms = torch.cat((
-            transform,
-            last_rows
-            ), axis=2)
-        
-        return _tforms
-    
-
-class Transform2Transform:
+class Transforms:
     # transform into 4*4 transformation matrix
     def __init__(self,
                 pred_type=None,

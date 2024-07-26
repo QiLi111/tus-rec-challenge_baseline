@@ -3,16 +3,13 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot_scans(frames,tforms,scan_name,labels_global_four,saved_folder,pred_GP,tform_calib_scale,image_points):
-    # plot the scan in 3D
+def plot_scans(frames,tforms,scan_name,label_GP,pred_GP,saved_folder,tform_calib_scale,image_points):
+    # plot scan in 3D
 
-    predictions_global_allpts = pred_GP + torch.matmul(tform_calib_scale,image_points)[0:3,:].expand(pred_GP.shape[0],-1,-1).numpy()
-    predictions_global_four = predictions_global_allpts[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
-    # add the first frame
-    first_frame_coord_all = torch.matmul(tform_calib_scale,image_points.cpu())[0:3,:]
-    first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
-    predictions_global_four = np.concatenate((first_frame_coord,predictions_global_four),axis = 0)
-    
+    # get four corner points
+    label_global_four = select4pts(label_GP,tform_calib_scale,image_points,frames)
+    pred_global_four = select4pts(pred_GP,tform_calib_scale,image_points,frames)
+
     frames, tforms = (torch.tensor(t) for t in [frames, tforms])
     frames = frames/255
     
@@ -21,10 +18,10 @@ def plot_scans(frames,tforms,scan_name,labels_global_four,saved_folder,pred_GP,t
 
     color = ['g','r']
     # plot label and prediction separately
-    plot_scan_individual(labels_global_four,frames,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50, legend = 'GT')
-    plot_scan_individual(predictions_global_four,frames,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50, legend = 'Pred')
+    plot_scan_individual(label_global_four,frames,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_label'),step = frames.shape[0]-1,color = color[0],width = 4, scatter = 8, legend_size=50, legend = 'GT')
+    plot_scan_individual(pred_global_four,frames,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_pred'),step = frames.shape[0]-1,color = color[1],width = 4, scatter = 8, legend_size=50, legend = 'Pred')
     # plot label and prediction in the same figure 
-    plot_scan_label_pred(labels_global_four,predictions_global_four,frames,color,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_pred_label'),step = frames.shape[0]-1,width = 4, scatter = 8, legend_size=50)
+    plot_scan_label_pred(label_global_four,pred_global_four,frames,color,os.path.join(saved_folder,'sub%03d__%s' % (int(scan_name.split('__')[0][3:]),scan_name.split('__')[1])+'_pred_label'),step = frames.shape[0]-1,width = 4, scatter = 8, legend_size=50)
 
 def plot_scan_individual(gt,frame,saved_name,step,color,width = 4, scatter = 8, legend_size=50,legend = None):
     # plot the scan in 3D
@@ -101,4 +98,16 @@ def plot_scan_label_pred(gt,pred,frame,color,saved_name,step,width = 4, scatter 
     
     plt.savefig(saved_name +'.png')
     plt.close()
-                
+
+def select4pts(GP,tform_calib_scale,image_points,frames):
+    # index four corner pts for each frame, from all pixels
+
+    global_allpts = GP + torch.matmul(tform_calib_scale,image_points)[0:3,:].expand(GP.shape[0],-1,-1).numpy()
+    global_four = global_allpts[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]]
+    # add the first frame
+    first_frame_coord_all = torch.matmul(tform_calib_scale,image_points.cpu())[0:3,:]
+    first_frame_coord = first_frame_coord_all.numpy()[...,[0,frames.shape[-1]-1,(frames.shape[-2]-1)*frames.shape[-1],-1]][None,...]
+    global_four = np.concatenate((first_frame_coord,global_four),axis = 0)
+
+    return global_four
+    

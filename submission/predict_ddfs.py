@@ -1,21 +1,28 @@
 # this is the function for generating DDF
 import os
-import torch
 import json
 from baseline_model.Prediction import Prediction
 
 def predict_ddfs(frames,landmark,data_path_calib):
-    '''
-    Note:
+    """
+    NOTE:
     Here is just an example.
     Fill in below with your own function.
-    Required Input:
-                    frames: frames in the scan, numpy array with the shape of [N,480,640], where N is the number of frames in this scan
-                    landmark: numpy array in a shape of [20,3], denoting the location of landmark. For example, a landmark with location of [10,200,100] denotes the landmark on the 10th frame, with coordinate of [200,100]
-                    data_path_calib: path to calibration matrix.
-    Required Output: 
-                    four kinds of DDFs: GP,GL,LP,LL
-    '''
+    Requirement details can be found at : https://github-pages.ucl.ac.uk/tus-rec-challenge/submission.html
+    
+    Args:
+        frames (numpy.ndarray): shape=(N, 480, 640),frames in the scan, where N is the number of frames in this scan
+        landmark (numpy.ndarray): shape=(20,3), denoting the location of landmark. For example, a landmark with location of (10,200,100) denotes the landmark on the 10th frame, with coordinate of (200,100)
+        data_path_calib (str): path to calibration matrix
+
+    Returns:
+        pred_global_allpts_DDF (numpy.ndarray): shape=(N-1, 3, 307200), global DDF for all pixels, where N-1 is the number of frames in that scan (excluding the first frame)
+        pred_global_landmark_DDF (numpy.ndarray): shape=(3, 20), global DDF for landmark  
+        pred_local_allpts_DDF (numpy.ndarray): shape=(N-1, 3, 307200), local DDF for all pixels, where N-1 is the number of frames in that scan (excluding the first frame) 
+        pred_local_landmark_DDF (numpy.ndarray): shape=(3, 20), local DDF for landmark
+    
+    """
+    
     # path to the baseline model
     model_path = os.path.dirname(os.path.realpath(__file__))+'/'+'baseline_model'
     # parameters used in baseline code
@@ -27,7 +34,7 @@ def predict_ddfs(frames,landmark,data_path_calib):
     pred_global_allpts_DDF,\
     pred_global_landmark_DDF,\
     pred_local_allpts_DDF,\
-    pred_local_landmark_DDF = prediction.generate_pred_values(frames,landmark)
+    pred_local_landmark_DDF = prediction.generate_prediction_DDF(frames,landmark)
 
     return pred_global_allpts_DDF,pred_global_landmark_DDF,pred_local_allpts_DDF,pred_local_landmark_DDF
 

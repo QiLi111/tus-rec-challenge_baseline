@@ -31,7 +31,7 @@
 > * Participants are required to dockerize their trained network/algorithm/method and submit them via a file-sharing link (e.g., OneDrive, Dropbox) to the organizers via this [form](https://forms.office.com/e/QChhNkLYiu).
 
 ## Data structure
-We have provided validation data [here](https://zenodo.org/doi/10.5281/zenodo.12752246), which has the same structure as the test data. A successful run on the validation set will ensure that the code will run without problems on the holdout test set. The data folder structure is as follows. Details can be found in the [zenodo page](https://zenodo.org/doi/10.5281/zenodo.12752246).
+We have provided validation data [here](https://zenodo.org/doi/10.5281/zenodo.12979481), which has the same structure as the test data. A successful run on the validation set will ensure that the code will run without problems on the holdout test set. The data folder structure is as follows. Details can be found in the [zenodo page](https://zenodo.org/doi/10.5281/zenodo.12979481).
 
 ```bash
 ├── data/
@@ -134,10 +134,10 @@ Alternatively, the docker image is also available online. You can download it wi
   docker load --input tus-rec.tar
   ```
 
-#### 5. Download Validation Dataset `Freehand_US_data_val.zip` [here](https://zenodo.org/doi/10.5281/zenodo.12752246) into `submission` folder. (You may need to install zenodo_get)
+#### 5. Download Validation Dataset `Freehand_US_data_val.zip` [here](https://zenodo.org/doi/10.5281/zenodo.12979481) into `submission` folder. (You may need to install zenodo_get)
 ```
 pip3 install zenodo_get
-zenodo_get 12752246
+zenodo_get 12979481
 ```
 
 #### 6. Unzip.

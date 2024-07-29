@@ -32,7 +32,7 @@ For details information, please see [Assessment Criteria](https://github-pages.u
 
 Acquisition devices and config: The 2D US images were acquired using an Ultrasonix machine (BK, Europe) with a curvilinear probe (4DC7-3/40). The associated position information of each frame was recorded by an optical tracker (NDI Polaris Vicra, Northern Digital Inc., Canada). The acquired US frames were recorded at 20 fps, with an image size of 480×640, without speckle reduction. The frequency was set at 6MHz with a dynamic range of 83 dB, an overall gain of 48% and a depth of 9 cm. 
 
-Scanning protocol: Both left and right forearms of volunteers were scanned. For each forearm, the US probe moves in three different trajectories (straight line shape, "C" shape, and "S" shape), in a distal-to-proximal direction followed by a proximal-to-distal direction, with the US plane perpendicular of and parallel to the scanning direction. The train dataset contains 1200 scans in total, 24 scans associated with each subject.
+Scanning protocol: Both left and right forearms of volunteers were scanned. For each forearm, the US probe moves in three different trajectories (straight line shape, "C" shape, and "S" shape), in a distal-to-proximal direction followed by a proximal-to-distal direction, with the US plane perpendicular of and parallel to the scanning direction, as illustrated in the figure below. The train dataset contains 1200 scans in total, 24 scans associated with each subject.
 
 ![image info](img/scan_traj.png)
 
@@ -46,20 +46,20 @@ Scanning protocol: Both left and right forearms of volunteers were scanned. For 
 
     * Notations in the name of each .h5 file: “RH”: right arm; “LH”: “left arm”; “Per”: perpendicular; “Par”: parallel; “L”: straight line shape; “C”: C shape; “S”: S shape; “DtP”: distal-to-proximal direction; “PtD”: proximal-to-distal direction; For example, “RH_Per_L_DtP.h5” denotes a scan on the right forearm, with ultrasound probe perpendicular of the forearm sweeping along straight line, in distal-to-proximal direction.
 
-* Calibration matrix: The calibration matrix was obtained using a pinhead-based method. The `scaling_from_pixel_to_mm` and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` are provided in the “calib_matrix.csv”, where `scaling_from_pixel_to_mm` is the scale between image coordinate system (in pixel) and image coordinate system (in mm), and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` is the rigid transformation between image coordinate system (in mm) to tracking tool coordinate system.
+* Calibration matrix: The calibration matrix was obtained using a pinhead-based method. The `scaling_from_pixel_to_mm` and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` are provided in the “calib_matrix.csv”, where `scaling_from_pixel_to_mm` is the scale between image coordinate system (in pixel) and image coordinate system (in mm), and `spatial_calibration_from_image_coordinate_system_to_tracking_tool_coordinate_system` is the rigid transformation between image coordinate system (in mm) to tracking tool coordinate system. Please refer to an example that this calibration matrix is read and used in the baseline code [here](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/0b7eb6c9c7df941f9425dd0d558ab285329b4ae6/train.py#L65).
 
 ## Training Code
 
 ### Instruction
-This repository provides a framework for freehand US pose regression, including usage of various types of predictions and labels (see [transformation.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/utils/transform.py)). Please note that the networks used here are small and simplified for demonstration purposes.
+This repository provides an example framework for freehand US pose regression, including usage of various types of predictions and labels (see [transformation.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/utils/transform.py)). Please note that the networks used here are small and simplified for demonstration purposes.
 
-For instance, the network can predict the transformation between two US frames as 6 DOF "parameter", and if the label type is "point", the loss is calculated as the point distance (by transforming "parameter" to "point" using function [parameter_to_point](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/a7a235044d9fa0275470024df25db099c7e65522/utils/transform.py#L267)). The steps below illustrate an example of training a pose regression model and generate 4 kinds of displacements. 
+For instance, the network can predict the transformation between two US frames as 6 DOF "parameter". If the label type is "point", the loss is calculated as the point distance (by transforming "parameter" to "point" using function [parameter_to_point](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/a7a235044d9fa0275470024df25db099c7e65522/utils/transform.py#L267)). The steps below illustrate an example of training a pose regression model and generate 4 kinds of displacements. 
 
 <!-- We use the transformation from image coordinate system (in mm) to image coordinate system (in mm), for example described in function [to_transform_t2t](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/2cdc92c003af8d985a50f27ea97900ba35da5c98/utils/transform.py#L93).  -->
 
 <!-- The model trained with labels defined above is independent of the rigid part in calibration matrix, and only dependent of the scaling. That is to say, the trained model is independent of the relative position between the tracker tool and the probe, and only dependent of the configuration of the probe.  -->
 
-For more information about the algorithm, refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551).
+For more information about the algorithms, refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551).
 
 ### Steps to run the code
 #### 1. Clone the repository.

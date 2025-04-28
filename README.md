@@ -59,7 +59,7 @@ For instance, the network can predict the transformation between two US frames a
 
 <!-- The model trained with labels defined above is independent of the rigid part in calibration matrix, and only dependent of the scaling. That is to say, the trained model is independent of the relative position between the tracker tool and the probe, and only dependent of the configuration of the probe.  -->
 
-For more information about the algorithms, refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551).
+<!-- For more information about the algorithms, refer to [Prevost et al. 2018](https://doi.org/10.1016/j.media.2018.06.003) and [Li et al. 2023](https://doi.org/10.1109/TBME.2023.3325551). -->
 
 ### Steps to run the code
 #### 1. Clone the repository.

@@ -1,4 +1,4 @@
-# Trackerless 3D Freehand Ultrasound Reconstruction Challenge
+# Trackerless 3D Freehand Ultrasound Reconstruction Challenge 2024 (TUS-REC2024)
 <!-- ## About -->
 
 [Website](https://github-pages.ucl.ac.uk/tus-rec-challenge/TUS-REC2024/) |

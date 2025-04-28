@@ -1,7 +1,7 @@
 # Trackerless 3D Freehand Ultrasound Reconstruction Challenge
 <!-- ## About -->
 
-[Website](https://github-pages.ucl.ac.uk/tus-rec-challenge/) |
+[Website](https://github-pages.ucl.ac.uk/tus-rec-challenge/TUS-REC2024/) |
 [Train Dataset (Part 1,](https://zenodo.org/doi/10.5281/zenodo.11178508) 
 [Part 2,](https://zenodo.org/doi/10.5281/zenodo.11180794)
 [Part 3)](https://zenodo.org/doi/10.5281/zenodo.11355499) |
@@ -26,7 +26,7 @@ The aim of this task is to reconstruct 2D US images into a 3D volume. The algori
 
 Participant teams are expected to make use of the sequential data and potentially make knowledge transfer from other domains such as computer vision and computer-assisted intervention. The participant teams are expected to take US scan as input and output two sets of pixel displacement vectors, indicating the transformation to reference frame, i.e., first frame in this task. The evaluation process will take the generated displacement vectors from their dockerized models, and produce the final accuracy score to represent the reconstruction performance, at local and global levels, representing different clinical application of the reconstruction methods.
 
-For details information, please see [Assessment Criteria](https://github-pages.ucl.ac.uk/tus-rec-challenge/assessment.html), and also [generate_DDF.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/generate_DDF.py) for an example of generating required 4 kinds of displacement vectors.
+For details information, please see [Assessment Criteria](https://github-pages.ucl.ac.uk/tus-rec-challenge/TUS-REC2024/assessment.html), and also [generate_DDF.py](https://github.com/QiLi111/tus-rec-challenge_baseline/blob/main/generate_DDF.py) for an example of generating required 4 kinds of displacement vectors.
 
 ## Dataset
 
@@ -123,7 +123,7 @@ python3 generate_DDF.py
 ```
 
 ## Data Usage Policy
-The training and validation data provided may be utilized within the research scope of this challenge and in subsequent research-related publications. However, commercial use of the training and validation data is prohibited. In cases where the intended use is ambiguous, participants accessing the data are requested to abstain from further distribution or use outside the scope of this challenge. Please refer to [this Section](https://github-pages.ucl.ac.uk/tus-rec-challenge/policies.html) for detailed data usage policy.
+The training and validation data provided may be utilized within the research scope of this challenge and in subsequent research-related publications. However, commercial use of the training and validation data is prohibited. In cases where the intended use is ambiguous, participants accessing the data are requested to abstain from further distribution or use outside the scope of this challenge. Please refer to [this Section](https://github-pages.ucl.ac.uk/tus-rec-challenge/TUS-REC2024/policies.html) for detailed data usage policy.
 
 After we publish the summary paper of the challenge, if you use our dataset in your publication, please cite the summary paper (reference will be provided once published) and some of the follwing articles: 
 * Qi Li, Ziyi Shen, Qianye Yang, Dean C. Barratt, Matthew J. Clarkson, Tom Vercauteren, and Yipeng Hu. "Nonrigid Reconstruction of Freehand Ultrasound without a Tracker." In International Conference on Medical Image Computing and Computer-Assisted Intervention, pp. 689-699. Cham: Springer Nature Switzerland, 2024. doi: [10.1007/978-3-031-72083-3_64](https://doi.org/10.1007/978-3-031-72083-3_64).

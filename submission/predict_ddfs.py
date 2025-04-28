@@ -8,7 +8,7 @@ def predict_ddfs(frames,landmark,data_path_calib):
     NOTE:
     Here is just an example.
     Fill in below with your own function.
-    Requirement details can be found at : https://github-pages.ucl.ac.uk/tus-rec-challenge/submission.html
+    Requirement details can be found at : https://github-pages.ucl.ac.uk/tus-rec-challenge/TUS-REC2024/submission.html
     
     Args:
         frames (numpy.ndarray): shape=(N, 480, 640),frames in the scan, where N is the number of frames in this scan
